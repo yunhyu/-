@@ -17,8 +17,8 @@ public class GMainFrame extends JFrame {
 	
 	private GToolBar toolBar;
 	private GMenuBar menuBar;
-	private Canvus canvus;
-	private ListenerAction action;
+	private GDrawingPanel canvus;
+//	private ListenerAction action;
 	private BorderLayout layout;
 	
 	public GMainFrame(GraphicsConfiguration gc) {super(gc);}
@@ -32,8 +32,8 @@ public class GMainFrame extends JFrame {
 		
 		this.menuBar = new GMenuBar();
 		this.toolBar = new GToolBar();
-		this.canvus = new Canvus();
-		this.action = new ListenerAction();
+		this.canvus = new GDrawingPanel();
+//		this.action = new ListenerAction();
 		
 		this.layout = new BorderLayout();
 		this.setLayout(layout);
@@ -45,22 +45,19 @@ public class GMainFrame extends JFrame {
 	public void initialize() {
 		this.setVisible(true);
 		
-		this.toolBar.initialize(action, 0);
+		this.toolBar.initialize(this.canvus);
 		this.canvus.initialize(0);
-//		System.out.println(this.getBufferStrategy()+", "+this.isDoubleBuffered());
-//		this.createBufferStrategy(2);
-//		System.out.println(this.getBufferStrategy()+", "+this.isDoubleBuffered());
 	}
 	
-	private class ListenerAction implements ActionListener{
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			String dummy = e.getActionCommand();
-			int shape = Integer.parseInt(dummy);
-			toolBar.setShape(shape);
-			canvus.setMethod(shape);
-		}
-	}
+//	private class ListenerAction implements ActionListener{
+//
+//		@Override
+//		public void actionPerformed(ActionEvent e) {
+//			String dummy = e.getActionCommand();
+//			int shape = Integer.parseInt(dummy);
+//			toolBar.setShape(shape);
+//			canvus.setMethod(shape);
+//		}
+//	}
 
 }

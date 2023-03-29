@@ -61,8 +61,7 @@ public class Oval extends Shape{
 //			int[] fp = this.getFP((super.width/2)-4, (super.height/2)-4);
 //			g.drawOval(super.center[0]-2, fp[0]-2, 4, 4);
 //			g.drawOval(super.center[0]-2, fp[1]-2, 4, 4);
-//			g.drawOval(super.x+4, super.y+4, super.width-8, super.height-8);
-//			
+//			g.drawOval(super.x+4, super.y+4, super.width-8, super.height-8);	
 //		}
 //		System.out.println(this.focusPoint1+", "+this.focusPoint2);
 	}

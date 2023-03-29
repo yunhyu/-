@@ -17,7 +17,7 @@ import 패턴중심사고.shapes.Polygon;
 import 패턴중심사고.shapes.Rectangle;
 import 패턴중심사고.shapes.Shape;
 
-public class Canvus extends JPanel {
+public class GDrawingPanel extends JPanel {
 	
 	/**
 	 * 
@@ -25,13 +25,14 @@ public class Canvus extends JPanel {
 	private static final long serialVersionUID = 5537928810270967677L;
 	
 	private int method=-1;
+	private int selectedShape;
 	private Point startPoint, endPoint;
 	private Color color;
 	private Shape drawingShape;
 	private Vector<Shape> shapes;
 	private MouseHandler mouse;
 	
-	public Canvus() {
+	public GDrawingPanel() {
 		this.setBackground(Color.white);
 		this.mouse = new MouseHandler();
 		this.shapes = new Vector<Shape>();
@@ -40,8 +41,8 @@ public class Canvus extends JPanel {
 	}
 	public void initialize(int method) {
 		this.setMethod(method);
-		this.setVisible(true);
 		this.color = null;
+		this.selectedShape = -1;
 	}
 	public void draw() {
 		this.drawPaints(this.getGraphics());
@@ -131,14 +132,12 @@ public class Canvus extends JPanel {
 	}
 	
 	private class MouseHandler implements MouseMotionListener, MouseListener{
-
-		private int selectedShape=-1;
 		
 		@Override
 		public void mouseDragged(MouseEvent e) {
 			endPoint = e.getPoint();
 			if(method==0) {
-				if(this.selectedShape!=-1)moveSelected(this.selectedShape);
+				if(selectedShape!=-1)moveSelected(selectedShape);
 				startPoint = endPoint;
 			}else draw();
 //			System.out.print(endPoint);
@@ -147,16 +146,18 @@ public class Canvus extends JPanel {
 		@Override
 		public void mouseMoved(MouseEvent e) {}
 		@Override
-		public void mouseClicked(MouseEvent e) {System.out.println(e.getPoint()+", mouseClicked");}
+		public void mouseClicked(MouseEvent e) {
+			
+		}
 		@Override
 		public void mousePressed(MouseEvent e) {
 			startPoint = e.getPoint();
 			if(method==0) {
 				for (int i=0;i<shapes.size();i++) if(shapes.get(i).grab(e.getPoint())) {
-					this.selectedShape=i;
-					System.out.println("I'm here!!!   "+this.selectedShape);
+					selectedShape=i;
+					System.out.println("I'm here!!!   "+selectedShape);
 					break;
-				}else this.selectedShape=-1;
+				}else selectedShape=-1;
 			}else shapes.add(0, drawingShape);
 		}
 		@Override

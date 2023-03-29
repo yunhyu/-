@@ -22,15 +22,22 @@ public class Rectangle extends Shape{
 	@Override
 	public void draw(Graphics g) {
 		g.drawRect(x, y, width, height);
+		if(super.isSelected) {
+			g.drawRect(x, y, width, height);
+		}
 //		g.setColor(Color.blue);
 //		g.drawRect(super.x+4, super.y+4, super.width-8, super.height-8);
+//		g.setColor(Color.black);
+		
+//		g.setColor(Color.blue);
+//		g.fillRect(x+1, y+1, width-1, height-1);
 //		g.setColor(Color.black);
 	}
 	@Override
 	public boolean grab(Point mouse) {
-		if(super.x<mouse.x&&super.x+super.width>mouse.x&&super.y<mouse.y&&super.y+super.height>mouse.y) {
+		if(super.isInRectRange(x, y, width, height, mouse)) {
 			if(super.color==null) {
-				if(!(super.x+4<mouse.x && super.x+super.width-8>mouse.x && super.y+4<mouse.y && super.y+super.height-8>mouse.y)) {
+				if(!super.isInRectRange(x+4, y+4, width-8, height-8, mouse)) {
 					return true;
 				}
 			}else {
