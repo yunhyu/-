@@ -1,12 +1,15 @@
-package 패턴중심사고;
+package main;
 
 import java.awt.BorderLayout;
 import java.awt.GraphicsConfiguration;
 import java.awt.HeadlessException;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 import javax.swing.JFrame;
+
+import control.GTransformer;
+import frame.GDrawingPanel;
+import frame.GMenuBar;
+import frame.GToolBar;
 
 public class GMainFrame extends JFrame {
 
@@ -18,6 +21,7 @@ public class GMainFrame extends JFrame {
 	private GToolBar toolBar;
 	private GMenuBar menuBar;
 	private GDrawingPanel canvus;
+	private GTransformer transformer;
 //	private ListenerAction action;
 	private BorderLayout layout;
 	
@@ -32,7 +36,8 @@ public class GMainFrame extends JFrame {
 		
 		this.menuBar = new GMenuBar();
 		this.toolBar = new GToolBar();
-		this.canvus = new GDrawingPanel();
+		this.transformer = new GTransformer();
+		this.canvus = new GDrawingPanel(this.transformer);
 //		this.action = new ListenerAction();
 		
 		this.layout = new BorderLayout();
@@ -45,8 +50,9 @@ public class GMainFrame extends JFrame {
 	public void initialize() {
 		this.setVisible(true);
 		
-		this.toolBar.initialize(this.canvus);
-		this.canvus.initialize(0);
+		this.toolBar.initialize();
+		this.transformer.initialize(this.toolBar, this.canvus);
+		this.canvus.initialize();
 	}
 	
 //	private class ListenerAction implements ActionListener{

@@ -1,4 +1,4 @@
-package 패턴중심사고;
+package frame;
 
 import javax.swing.JMenu;
 
