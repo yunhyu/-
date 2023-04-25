@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
-import java.awt.Polygon;
 import java.awt.geom.Ellipse2D;
 
 public class GOval extends GShape{
@@ -19,16 +18,7 @@ public class GOval extends GShape{
 		this.oval = (Ellipse2D)this.shape;
 	}
 	@Override
-	public void draw(Graphics g) {
-		Graphics2D g2D = (Graphics2D)g;
-		g2D.setColor(lineColor);
-		if(this.lineColor!=null)g2D.draw(shape);
-		g2D.setColor(innerColor);
-		if(this.innerColor!=null)g2D.fill(shape);
-		this.drawAnchors(g2D);
-	}
-	@Override
-	public void setting(Point start, Point end) {
+	public void initialize(Point start, Point end) {
 		int[] dummy = super.transPoint(start, end);
 		this.x = dummy[0];
 		this.y = dummy[1];
@@ -55,6 +45,15 @@ public class GOval extends GShape{
 		int[] focusPoint = this.getFP(this.width/2, this.height/2);
 		this.focusPoint1 = focusPoint[0];
 		this.focusPoint2 = focusPoint[1];
+	}
+	@Override
+	public void draw(Graphics g) {
+		Graphics2D g2D = (Graphics2D)g;
+		g2D.setColor(lineColor);
+		if(this.lineColor!=null)g2D.draw(shape);
+		g2D.setColor(innerColor);
+		if(this.innerColor!=null)g2D.fill(shape);
+		this.drawAnchors(g2D);
 	}
 	/**
 	 * Get oval's focus points in form of array.

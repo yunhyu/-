@@ -25,7 +25,7 @@ public abstract class GShape {
 		this.anchorY = new int[8];
 	}
 	/**for other shape or resize*/
-	public abstract void setting(Point start, Point mouse);
+	public abstract void initialize(Point start, Point mouse);
 	/**Only for Polygon.*/
 	public void addPoint(Point p) {};
 	/**

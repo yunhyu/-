@@ -34,9 +34,9 @@ public class GFreeLine extends GShape{
 	}
 	
 	@Override
-	public void setting(Point start, Point end) {
+	public void initialize(Point start, Point end) {
 		if(this.complete) {
-			this.resize();
+			this.resize(start, end);
 		}else {
 			this.setMaxMinCoordinate(end);
 			this.xCoordinate.add(end.x);
@@ -56,7 +56,30 @@ public class GFreeLine extends GShape{
 			else if(p.y<this.minY)	this.minY = p.y;
 		}
 	}
-	private void resize() {
+	@Override
+	public GShape finalize(Color innerColor, Color lineColor) {
+		int last = this.xCoordinate.size()-1;
+		if(last<=0) {
+			return null;
+		}
+		this.innerColor = innerColor;
+		this.lineColor = lineColor;
+		Point p1 = new Point(this.xCoordinate.get(0),this.yCoordinate.get(0));
+		Point p2 = new Point(this.xCoordinate.get(last),this.yCoordinate.get(last));
+		double distance = p1.distance(p2);
+		if(distance<5) {
+			this.xCoordinate.set(last, this.xCoordinate.get(0));
+			this.yCoordinate.set(last, this.yCoordinate.get(0));
+			Rectangle bounds = new Rectangle
+					(this.minX,this.minY,this.maxX-this.minX,this.maxY-this.minY);
+			return new GPolygon(xCoordinate,yCoordinate,bounds);
+		}else {
+			finishResize();
+			this.complete = true;
+			return this;
+		}
+	}
+	protected void resize(Point start, Point end) {
 		/* 6-4 - 앵커 위치
 		 * 0-2
 		 * 앵커는 움직이는 게 end, 반대편이 start임. 0 - 4 움직임에서 0이 4쪽으로 갈때는 rate가 줄어들지만, x좌표는 오히려
@@ -85,28 +108,6 @@ public class GFreeLine extends GShape{
 //		this.maxY = (int) (this.maxY*heightRate);
 //		this.minX = (int) (this.minX*widthRate);
 //		this.minY = (int) (this.minY*heightRate);
-	}
-	@Override
-	public GShape finalize(Color innerColor, Color lineColor) {
-		int last = this.xCoordinate.size()-1;
-		if(last<=0) {
-			return null;
-		}
-		this.innerColor = innerColor;
-		this.lineColor = lineColor;
-		Point p1 = new Point(this.xCoordinate.get(0),this.yCoordinate.get(0));
-		Point p2 = new Point(this.xCoordinate.get(last),this.yCoordinate.get(last));
-		double distance = p1.distance(p2);
-		if(distance<5) {
-			this.xCoordinate.set(last, this.xCoordinate.get(0));
-			this.yCoordinate.set(last, this.yCoordinate.get(0));
-			Rectangle bounds = new Rectangle
-					(this.minX,this.minY,this.maxX-this.minX,this.maxY-this.minY);
-			return new GPolygon(xCoordinate,yCoordinate,bounds);
-		}else {
-			finishResize();
-			return this;
-		}
 	}
 	@Override
 	public void finishResize() {

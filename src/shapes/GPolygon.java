@@ -40,12 +40,47 @@ public class GPolygon extends GFreeLine {
 	}
 	
 	@Override
-	public void setting(Point start, Point mouse) {
+	public void initialize(Point start, Point mouse) {
 		if(this.complete) {
 			//TODO resize
 		}else {
 			animationPoint = mouse;
 		}
+	}
+
+	@Override
+	public GShape finalize(Color innerColor, Color lineColor) {
+		int last = this.xCoordinate.size()-1;
+		if(last<=0) {
+			return null;
+		}
+		this.complete = true;
+		this.innerColor = innerColor;
+		this.lineColor = lineColor;
+		Point p1 = new Point(this.xCoordinate.get(0),this.yCoordinate.get(0));
+		Point p2 = new Point(this.xCoordinate.get(last),this.yCoordinate.get(last));
+		double distance = p1.distance(p2);
+		if(distance>5) {
+			Rectangle bounds = new Rectangle
+					(this.minX,this.minY,this.maxX-this.minX,this.maxY-this.minY);
+			return new GFreeLine(this.xCoordinate,this.yCoordinate,bounds);
+		} 
+		this.reset();
+		finishResize();
+		return this;
+	}
+	@Override
+	protected void resize(Point start, Point end) {
+		
+	}
+	@Override
+	public void finishResize() {
+		this.x = this.minX;
+		this.y = this.minY;
+		this.width = this.maxX - this.minX;
+		this.height = this.maxY - this.minY;
+		this.center.setLocation(x+(width/2), y+(height/2));
+		this.setAnchorLocation();
 	}
 	@Override
 	public void addPoint(Point p) {
@@ -77,37 +112,6 @@ public class GPolygon extends GFreeLine {
 			g2D.drawLine(p.x,p.y,animationPoint.x,animationPoint.y);
 		}
 		this.drawAnchors(g2D);
-	}
-
-	@Override
-	public GShape finalize(Color innerColor, Color lineColor) {
-		int last = this.xCoordinate.size()-1;
-		if(last<=0) {
-			return null;
-		}
-		this.complete = true;
-		this.innerColor = innerColor;
-		this.lineColor = lineColor;
-		Point p1 = new Point(this.xCoordinate.get(0),this.yCoordinate.get(0));
-		Point p2 = new Point(this.xCoordinate.get(last),this.yCoordinate.get(last));
-		double distance = p1.distance(p2);
-		if(distance>5) {
-			Rectangle bounds = new Rectangle
-					(this.minX,this.minY,this.maxX-this.minX,this.maxY-this.minY);
-			return new GFreeLine(this.xCoordinate,this.yCoordinate,bounds);
-		} 
-		this.reset();
-		finishResize();
-		return this;
-	}
-	@Override
-	public void finishResize() {
-		this.x = this.minX;
-		this.y = this.minY;
-		this.width = this.maxX - this.minX;
-		this.height = this.maxY - this.minY;
-		this.center.setLocation(x+(width/2), y+(height/2));
-		this.setAnchorLocation();
 	}
 	@Override
 	public boolean grab(Point mouse) {

@@ -2,7 +2,6 @@ package shapes;
 
 import java.awt.Color;
 import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
@@ -20,16 +19,8 @@ public class GLine extends GShape{
 	}
 	
 	@Override
-	public void setting(Point start, Point end) {
+	public void initialize(Point start, Point end) {
 		line.setLine(start, end);
-//		this.x = x1;
-//		this.y = y1;
-//		this.x2 = x2;
-//		this.y2 = y2;
-//		this.width= Math.abs(x1 - x2);
-//		this.height= Math.abs(y1 - y2);
-//		this.center[0]=x1+(this.width/2);
-//		this.center[1]=y1+(this.height/2);
 	}
 
 	@Override
@@ -61,6 +52,7 @@ public class GLine extends GShape{
 		p1.setLocation(p1.getX()+dx, p1.getY()+dy);
 		p2.setLocation(p2.getX()+dx, p2.getY()+dy);
 		this.line.setLine(p1, p2);
+		this.finishResize();
 	}
 	/**
 	 * Returns integer -1, 0 or  4. Returns -1 when no anchor is under the Point. 

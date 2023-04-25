@@ -20,12 +20,12 @@ public class GDrawingPanel extends JPanel {
 	
 	private GTransformer transformer;
 
-	public GDrawingPanel(GTransformer transformer) {
+	public GDrawingPanel() {
 		super();
 		this.setBackground(Color.white);
-		this.transformer = transformer;
 	}
-	public void initialize() {
+	public void initialize(GTransformer transformer) {
+		this.transformer = transformer;
 		MouseHandler mouse = new MouseHandler();
 		this.addMouseMotionListener(mouse);
 		this.addMouseListener(mouse);
@@ -41,6 +41,7 @@ public class GDrawingPanel extends JPanel {
 		@Override
 		public void mouseDragged(MouseEvent e) {
 			transformer.keepTransforming(e);
+//			System.out.println("   mouseDragged");
 		}
 		@Override
 		public void mouseMoved(MouseEvent e) {

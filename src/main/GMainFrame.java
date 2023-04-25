@@ -3,6 +3,8 @@ package main;
 import java.awt.BorderLayout;
 import java.awt.GraphicsConfiguration;
 import java.awt.HeadlessException;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 
 import javax.swing.JFrame;
 
@@ -37,24 +39,60 @@ public class GMainFrame extends JFrame {
 		this.menuBar = new GMenuBar();
 		this.toolBar = new GToolBar();
 		this.transformer = new GTransformer();
-		this.canvus = new GDrawingPanel(this.transformer);
+		this.canvus = new GDrawingPanel();
 //		this.action = new ListenerAction();
 		
 		this.layout = new BorderLayout();
 		this.setLayout(layout);
 		this.setJMenuBar(this.menuBar);
-		this.getContentPane().add(toolBar,BorderLayout.NORTH);
+//		this.getContentPane().add(toolBar,BorderLayout.NORTH);
 		this.add(toolBar,BorderLayout.NORTH);
 		this.add(canvus,BorderLayout.CENTER);
 	}
 	public void initialize() {
 		this.setVisible(true);
 		
+		EKeyHandler keyboard = new EKeyHandler();
 		this.toolBar.initialize();
 		this.transformer.initialize(this.toolBar, this.canvus);
-		this.canvus.initialize();
+		this.canvus.initialize(this.transformer);
+		
+		this.addKeyListener(keyboard);
+//		this.requestFocus();
 	}
 	
+//===============================================================================
+	
+	private class EKeyHandler implements KeyListener{
+
+		@Override
+		public void keyTyped(KeyEvent e) {
+			System.out.println("typed "+(int)e.getKeyChar());
+			int input = e.getKeyChar();
+			if(e.isShiftDown()) {
+				
+			}
+			else if(e.isControlDown()) {
+				
+			}
+			else if(input==127) {
+				transformer.deleteSelectedShape();
+			}else if(input>7&&input<127) {
+				
+			}
+		}
+
+		@Override
+		public void keyPressed(KeyEvent e) {
+			System.out.println("pressed");
+		}
+
+		@Override
+		public void keyReleased(KeyEvent e) {
+			System.out.println("released");
+		}
+		
+	}
 //	private class ListenerAction implements ActionListener{
 //
 //		@Override

@@ -1,9 +1,7 @@
 package shapes;
 
 import java.awt.Color;
-import java.awt.Graphics;
 import java.awt.Point;
-import java.awt.Rectangle;
 import java.awt.geom.Rectangle2D;
 
 public class GRectangle extends GShape{
@@ -15,7 +13,7 @@ public class GRectangle extends GShape{
 		this.rect = (Rectangle2D)this.shape;
 	}
 	@Override
-	public void setting(Point start, Point end) {
+	public void initialize(Point start, Point end) {
 		int[] dummy = super.transPoint(start, end);
 		this.x = dummy[0];
 		this.y = dummy[1];
@@ -25,11 +23,11 @@ public class GRectangle extends GShape{
 	}
 	@Override
 	public GShape finalize(Color innerColor, Color lineColor) {
+		this.innerColor = innerColor;
+		this.lineColor = lineColor;
 		if(this.width<1&&this.height<1) {
 			return null;
 		}
-		this.innerColor = innerColor;
-		this.lineColor = lineColor;
 		finishResize();
 		return this;
 	}

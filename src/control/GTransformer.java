@@ -31,17 +31,6 @@ public class GTransformer {
 		public void setOppositePoint(Point anchor) {this.anchorPoint = anchor;}
 		public Point getOppositePoint() {return this.anchorPoint;}
 	}
-//	public enum Anchors {
-//	ANCHOR_6, ANCHOR_5, ANCHOR_4,
-//	ANCHOR_3, 		    ANCHOR_7,
-//	ANCHOR_0, ANCHOR_1, ANCHOR_2;
-//	
-//	private byte anchorNum;
-//	
-//	private Anchors() {
-//		
-//	}
-//}
 	
 	private int selectedObject;
 	private Color innerColor, lineColor;
@@ -63,7 +52,7 @@ public class GTransformer {
 		this.innerColor = null;
 		this.lineColor = Color.black;
 		this.selectedObject = -1;
-		this.selectRange.finalize(innerColor, lineColor);
+		this.selectRange.finalize(new Color(230,255,255,80),new Color(200,235,235,255));
 	}
 	public void drawPaints(Graphics g) {
 		Dimension size = this.canvus.getSize();
@@ -71,13 +60,14 @@ public class GTransformer {
 		Graphics2D bfrG =(Graphics2D) buffer.getGraphics();
 		bfrG.setColor(this.canvus.getBackground());
 		bfrG.fillRect(0, 0, size.width,size.height);
-		for (GShape s:this.shapes) {
+		for (int i=this.shapes.size()-1; i>-1;i--) {
+			GShape s = this.shapes.get(i);
 			s.draw(bfrG);
 		}
 		g.drawImage(buffer, 0,0,null);
 	}
 	public void draw() {
-		this.drawingShape.setting(startPoint, currentPoint);
+		this.drawingShape.initialize(startPoint, currentPoint);
 		this.drawPaints(this.canvus.getGraphics());
 	}
 	
@@ -85,25 +75,26 @@ public class GTransformer {
 		int dx = this.currentPoint.x - this.previousPoint.x;
 		int dy = this.currentPoint.y - this.previousPoint.y;
 		if(action == GState.IDLE) {
-			System.out.println(dx +", "+ dy);
-			this.selectRange.setting(startPoint, currentPoint);
+//			System.out.println(dx +", "+ dy);
+			this.selectRange.initialize(startPoint, currentPoint);
 		}else if(action == GState.MOVE) {
 			this.shapes.get(index).move(dx, dy);
 		}else if(action == GState.RESIZE) {
 //			System.out.println(action.getAnchorNumber());
 			byte anchorNum = action.getAnchorNumber();
 			GShape shape = this.shapes.get(index);
+			Point dummy;
 			if(anchorNum%2!=0){
-				Point dummy = this.transAnchor(shape, anchorNum);
+				dummy = this.transAnchor(shape, anchorNum);
 				if(anchorNum==3 || anchorNum==7) {
 					dummy.setLocation(this.currentPoint.x, dummy.y);
 				}else if(anchorNum==1 || anchorNum==5) {
 					dummy.setLocation(dummy.x, this.currentPoint.y);
 				}
-				shape.setting(action.getOppositePoint(),dummy);
 			}else {
-				shape.setting(action.getOppositePoint(),this.currentPoint);
+				dummy = this.currentPoint;
 			}
+			shape.initialize(action.getOppositePoint(),dummy);
 			shape.finishResize();
 		}
 		this.drawPaints(this.canvus.getGraphics());
@@ -148,6 +139,7 @@ public class GTransformer {
 				}
 				System.out.println(this.state);
 			}else {
+				this.state = GState.IDLE;
 				this.shapes.add(0, this.selectRange);
 			}
 		}else if(state != GState.DRAWINGPOLYGON){
@@ -157,7 +149,7 @@ public class GTransformer {
 			if(selected == EShape.EPOLYGON) {
 				this.state = GState.DRAWINGPOLYGON;
 				this.drawingShape.addPoint(startPoint);
-				drawingShape.setting(null, startPoint);
+				drawingShape.initialize(null, startPoint);
 			}else {
 				this.state = GState.DRAWING;
 			}
@@ -171,11 +163,10 @@ public class GTransformer {
 				previousPoint = this.currentPoint;
 			}
 		}else if(state == GState.DRAWINGPOLYGON) {
-			drawingShape.setting(null, currentPoint);
+			drawingShape.initialize(null, currentPoint);
 			this.drawPaints(this.canvus.getGraphics());
 		}else draw();
 //		System.out.print(endPoint);
-//		System.out.println("   mouseDragged");
 	}
 	public void finalizeTransforming(MouseEvent e) {
 		if(toolbar.getSelectedShape()!=EShape.SELECT) {
@@ -191,13 +182,13 @@ public class GTransformer {
 		}else if (this.state == GState.IDLE) {
 			this.shapes.remove(0);
 			
-			for (int i=0;i<this.shapes.size();i++) {
-				GShape s = shapes.get(i);
-				if(this.selectRange.grab(s.getCenter())) {
-					s.select(true);
-					//TODO
-				}
-			}
+//			for (int i=0;i<this.shapes.size();i++) {
+//				GShape s = shapes.get(i);
+//				if(this.selectRange.grab(s.getCenter())) {
+//					s.select(true);
+//					//TODO
+//				}
+//			}
 			this.selectRange.reset();
 			this.drawPaints(this.canvus.getGraphics());
 		}
@@ -227,22 +218,30 @@ public class GTransformer {
 	}
 	public void polygonAnimation(Point p) {
 		if(state == GState.DRAWINGPOLYGON) {
-			drawingShape.setting(null, p);
+			drawingShape.initialize(null, p);
 			this.drawPaints(this.canvus.getGraphics());
 		}
 	}
+	/**
+	 * Select GShape object in Vector, 
+	 * @param index The number of shape in shapes Vector. if the number is -1,
+	 * than no shapes are selected
+	 * */
 	private void selectObject(int index) {
-		/*case of index == -1, choose no object*/
 		if(selectedObject!=-1)shapes.get(selectedObject).select(false);
 		if(index != -1) shapes.get(index).select(true);
 		selectedObject = index;
 		this.drawPaints(this.canvus.getGraphics());
 	}
-	
-	public Vector<GShape> getShapes(){
-		return this.shapes;
-	}
 	public boolean state(GState s) {
 		return s == this.state;
+	}
+	
+	public void deleteSelectedShape() {
+		if(this.selectedObject!=-1) {
+			this.shapes.removeElementAt(selectedObject);
+			this.selectedObject = -1;
+			this.drawPaints(this.canvus.getGraphics());
+		}
 	}
 }
