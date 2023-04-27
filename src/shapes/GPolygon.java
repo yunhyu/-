@@ -19,7 +19,7 @@ public class GPolygon extends GFreeLine {
 		this.shape = new Polygon();
 		this.polygon = (Polygon)this.shape;
 	}
-	public GPolygon(Collection<Integer> x, Collection<Integer> y, Rectangle size) {
+	public GPolygon(Collection<Integer> x, Collection<Integer> y, Rectangle size, Color innerColor, Color lineColor) {
 		this();
 		this.xCoordinate.addAll(x);
 		this.yCoordinate.addAll(y);
@@ -29,6 +29,8 @@ public class GPolygon extends GFreeLine {
 		this.maxY=size.y+size.height;
 		this.reset();
 		this.complete = true;
+		this.innerColor = innerColor;
+		this.lineColor = lineColor;
 		this.finishResize();
 	}
 	private void reset() {
@@ -54,17 +56,17 @@ public class GPolygon extends GFreeLine {
 		if(last<=0) {
 			return null;
 		}
-		this.complete = true;
-		this.innerColor = innerColor;
-		this.lineColor = lineColor;
 		Point p1 = new Point(this.xCoordinate.get(0),this.yCoordinate.get(0));
 		Point p2 = new Point(this.xCoordinate.get(last),this.yCoordinate.get(last));
 		double distance = p1.distance(p2);
 		if(distance>5) {
 			Rectangle bounds = new Rectangle
 					(this.minX,this.minY,this.maxX-this.minX,this.maxY-this.minY);
-			return new GFreeLine(this.xCoordinate,this.yCoordinate,bounds);
+			return new GFreeLine(this.xCoordinate,this.yCoordinate,bounds, innerColor, lineColor);
 		} 
+		this.complete = true;
+		this.innerColor = innerColor;
+		this.lineColor = lineColor;
 		this.reset();
 		finishResize();
 		return this;
@@ -72,15 +74,6 @@ public class GPolygon extends GFreeLine {
 	@Override
 	protected void resize(Point start, Point end) {
 		
-	}
-	@Override
-	public void finishResize() {
-		this.x = this.minX;
-		this.y = this.minY;
-		this.width = this.maxX - this.minX;
-		this.height = this.maxY - this.minY;
-		this.center.setLocation(x+(width/2), y+(height/2));
-		this.setAnchorLocation();
 	}
 	@Override
 	public void addPoint(Point p) {

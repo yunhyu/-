@@ -69,10 +69,12 @@ public class GMainFrame extends JFrame {
 		public void keyTyped(KeyEvent e) {
 			System.out.println("typed "+(int)e.getKeyChar());
 			int input = e.getKeyChar();
-			if(e.isShiftDown()) {
-				
-			}
-			else if(e.isControlDown()) {
+//			if(e.isShiftDown()) {
+//				transformer.setFixed(true)
+//			}else {
+//				transformer.setFixed(false)
+//			}
+			if(input==3) {//ctrl c
 				
 			}
 			else if(input==127) {

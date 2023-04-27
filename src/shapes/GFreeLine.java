@@ -21,7 +21,7 @@ public class GFreeLine extends GShape{
 		this.yCoordinate = new Vector<Integer>();
 		this.complete = false;
 	}
-	public GFreeLine(Collection<Integer> x, Collection<Integer> y, Rectangle size) {
+	public GFreeLine(Collection<Integer> x, Collection<Integer> y, Rectangle size, Color innerColor, Color lineColor) {
 		this();
 		this.xCoordinate.addAll(x);
 		this.yCoordinate.addAll(y);
@@ -30,6 +30,8 @@ public class GFreeLine extends GShape{
 		this.maxX=size.x+size.width;
 		this.maxY=size.y+size.height;
 		this.complete = true;
+		this.innerColor = innerColor;
+		this.lineColor = lineColor;
 		this.finishResize();
 	}
 	
@@ -62,8 +64,6 @@ public class GFreeLine extends GShape{
 		if(last<=0) {
 			return null;
 		}
-		this.innerColor = innerColor;
-		this.lineColor = lineColor;
 		Point p1 = new Point(this.xCoordinate.get(0),this.yCoordinate.get(0));
 		Point p2 = new Point(this.xCoordinate.get(last),this.yCoordinate.get(last));
 		double distance = p1.distance(p2);
@@ -72,10 +72,12 @@ public class GFreeLine extends GShape{
 			this.yCoordinate.set(last, this.yCoordinate.get(0));
 			Rectangle bounds = new Rectangle
 					(this.minX,this.minY,this.maxX-this.minX,this.maxY-this.minY);
-			return new GPolygon(xCoordinate,yCoordinate,bounds);
+			return new GPolygon(xCoordinate,yCoordinate,bounds, innerColor, lineColor);
 		}else {
 			finishResize();
 			this.complete = true;
+			this.innerColor = innerColor;
+			this.lineColor = lineColor;
 			return this;
 		}
 	}
@@ -142,9 +144,7 @@ public class GFreeLine extends GShape{
 	}
 	@Override
 	public void move(int dx, int dy) {
-		this.x+=dx;
-		this.y+=dy;
-		this.center.setLocation(this.center.x+dx, this.center.y+dy);
+		super.move(dx, dy);
 		for (int i=0;i<this.xCoordinate.size();i++) {
 			int a = this.xCoordinate.get(i);
 			this.xCoordinate.setElementAt(a+dx,i);
@@ -157,6 +157,5 @@ public class GFreeLine extends GShape{
 		this.minX+=dx;
 		this.maxY+=dy;
 		this.minY+=dy;
-		this.setAnchorLocation();
 	}
 }

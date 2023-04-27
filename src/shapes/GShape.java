@@ -8,19 +8,17 @@ import java.awt.Shape;
 
 public abstract class GShape {
 
+	private int[] anchorX, anchorY;
 	protected int x,y,height,width;
 	protected Point center;
 	protected boolean isSelected;
 	protected Shape shape;
 	protected Color innerColor, lineColor;
 	
-	private int[] anchorX;
-	private int[] anchorY;
-	
 	public GShape(){
 		this.center = new Point();
 		this.isSelected = false;
-		this.lineColor = Color.black;
+		this.lineColor = new Color(30, 30, 30, 100);
 		this.anchorX = new int[8];
 		this.anchorY = new int[8];
 	}

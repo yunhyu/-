@@ -32,9 +32,12 @@ public class GLine extends GShape{
 	}
 	@Override
 	public void finishResize() {
-		int x = Math.abs((int)(this.line.getX1()-this.line.getX2())/2);
-		int y = Math.abs((int)(this.line.getY1()-this.line.getY2())/2);
-		this.center.setLocation(x, y);
+		Point p1 = new Point();
+		Point p2 = new Point();
+		p1.setLocation(line.getP1());
+		p2.setLocation(line.getP2());
+		int[] dummy = this.transPoint(p1, p2);
+		this.center.setLocation(dummy[0]+(dummy[2]/2), dummy[1]+(dummy[3]/2));
 	}
 	@Override
 	public boolean grab(Point mouse) {

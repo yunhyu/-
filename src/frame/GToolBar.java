@@ -27,6 +27,7 @@ public class GToolBar extends JToolBar {
 		ERECTANGLE(new ImageIcon("resource/square.png"), "shapes.GRectangle"),
 		EOVAL(new ImageIcon("resource/oval.png"), "shapes.GOval"),
 		ELINE(new ImageIcon("resource/line.png"), "shapes.GLine"),
+		ETRIANGLE(new ImageIcon("resource/triangle.png"), "shapes.GTriangle"),
 		EFREELINE(new ImageIcon("resource/free.png"), "shapes.GFreeLine"),
 		EPOLYGON(new ImageIcon("resource/polygon.png"), "shapes.GPolygon"),
 		SELECT(new ImageIcon("resource/select.png"), null);
