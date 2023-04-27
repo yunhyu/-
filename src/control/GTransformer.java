@@ -47,7 +47,7 @@ public class GTransformer {
 		public Vector<Point> getOppositePoint() {return this.oppositePoint;}
 	}
 	
-//	private int selectedObject;
+	private int veiwPoint;
 	private Color innerColor, lineColor;
 	private Point startPoint, previousPoint, currentPoint;
 	private GRectangle selectRange;
@@ -68,7 +68,6 @@ public class GTransformer {
 		this.canvus = gDrawingPanel;
 		this.innerColor = null;
 		this.lineColor = Color.black;
-//		this.selectedObject = -1;
 		this.selectRange.finalize(new Color(230,255,255,80),new Color(200,235,235,255));
 	}
 	public void drawPaints(Graphics g) {
