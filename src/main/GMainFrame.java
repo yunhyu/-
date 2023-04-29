@@ -69,11 +69,6 @@ public class GMainFrame extends JFrame {
 		public void keyTyped(KeyEvent e) {
 			System.out.println("typed "+(int)e.getKeyChar());
 			int input = e.getKeyChar();
-//			if(e.isShiftDown()) {
-//				transformer.setFixed(true)
-//			}else {
-//				transformer.setFixed(false)
-//			}
 			if(input==3) {//ctrl c
 				
 			}
@@ -87,11 +82,17 @@ public class GMainFrame extends JFrame {
 		@Override
 		public void keyPressed(KeyEvent e) {
 			System.out.println("pressed");
+			if(e.isShiftDown()) {
+				transformer.setFixed(true);
+			}
 		}
 
 		@Override
 		public void keyReleased(KeyEvent e) {
 			System.out.println("released");
+			if(!e.isShiftDown()) {
+				transformer.setFixed(false);
+			}
 		}
 		
 	}

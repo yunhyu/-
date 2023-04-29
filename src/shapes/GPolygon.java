@@ -43,11 +43,7 @@ public class GPolygon extends GFreeLine {
 	
 	@Override
 	public void initialize(Point start, Point mouse) {
-		if(this.complete) {
-			//TODO resize
-		}else {
-			animationPoint = mouse;
-		}
+		animationPoint = mouse;
 	}
 
 	@Override
@@ -72,13 +68,11 @@ public class GPolygon extends GFreeLine {
 		return this;
 	}
 	@Override
-	protected void resize(Point start, Point end) {
+	public void resize(Point start, Point end) {
 		
 	}
 	@Override
 	public void addPoint(Point p) {
-//		this.print(p);
-//		this.print(this.xCoordinate.toString());
 		int size = this.xCoordinate.size()-1;
 		if(size==-1 || !(p.x==this.xCoordinate.get(size) && p.y==this.yCoordinate.get(size))) {
 			this.setMaxMinCoordinate(p);

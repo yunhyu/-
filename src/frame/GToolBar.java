@@ -3,11 +3,14 @@ package frame;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
+import javax.swing.JComboBox;
 import javax.swing.JRadioButton;
 import javax.swing.JToolBar;
 
@@ -20,6 +23,7 @@ public class GToolBar extends JToolBar {
 	 */
 	private static final long serialVersionUID = -6044105974330751117L;
 
+	private JComboBox<EColor> line, in;
 	private ButtonGroup group;
 	private EShape selectedShape;
 	
@@ -46,6 +50,24 @@ public class GToolBar extends JToolBar {
 		}
 		
 	}
+	public enum EColor{
+		NONE(null),
+		RED(Color.red), 
+		BLUE(Color.blue),
+		GREEN(Color.green),
+		YELLOW(Color.yellow),
+		ORANGE(Color.orange),
+		BLACK(Color.black),
+		WHITE(Color.white);
+		
+		private Color color;
+		private EColor(Color color) {
+			this.color = color;
+		}
+		public Color getColor() {
+			return this.color;
+		}
+	}
 	
 	public GToolBar() {
 		super();
@@ -64,8 +86,19 @@ public class GToolBar extends JToolBar {
 			group.add(button);
 			this.add(button);
 		}
+		line = new JComboBox<EColor>();
+		in = new JComboBox<EColor>();
+		this.addColorBox(line, EColor.BLACK);
+		this.addColorBox(in, EColor.NONE);
 	}
-	
+	private void addColorBox (JComboBox<EColor> box, EColor defaultColor) {
+		for(EColor c:EColor.values()) {
+			box.addItem(c);
+		}
+		box.setSelectedItem(defaultColor);
+		box.setFocusable(false);
+		this.add(box);
+	}
 	public void initialize() {
 		this.selectedShape = EShape.SELECT;
 		this.setShape(EShape.SELECT);
@@ -100,7 +133,15 @@ public class GToolBar extends JToolBar {
 			return null;
 		}
 	}
-	
+	public Color getLineColor() {
+		EColor eColor = (EColor)this.line.getSelectedItem();
+		return eColor.getColor();
+	}
+	public Color getInnerColor() {
+		EColor eColor = (EColor)this.in.getSelectedItem();
+		return eColor.getColor();
+	}
+//==================================================================================
 	private class ListenerAction implements ActionListener, MouseListener{
 
 		private boolean mousePressed = false;

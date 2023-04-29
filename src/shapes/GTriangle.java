@@ -38,7 +38,10 @@ public class GTriangle extends GShape {
 		this.finishResize();
 		return this;
 	}
-
+	@Override
+	public void resize(Point start, Point end) {
+		this.initialize(start, end);
+	}
 	@Override
 	public void finishResize() {
 		this.center.setLocation(x+(width/2), y+(height/2));

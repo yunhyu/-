@@ -9,7 +9,8 @@ import java.awt.Shape;
 public abstract class GShape {
 
 	private int[] anchorX, anchorY;
-	protected int x,y,height,width;
+	protected int x,y,height,width, angle;
+	protected byte quadrant;
 	protected Point center;
 	protected boolean isSelected;
 	protected Shape shape;
@@ -22,7 +23,7 @@ public abstract class GShape {
 		this.anchorX = new int[8];
 		this.anchorY = new int[8];
 	}
-	/**for other shape or resize*/
+	/**for other shape*/
 	public abstract void initialize(Point start, Point mouse);
 	/**Only for Polygon.*/
 	public void addPoint(Point p) {};
@@ -30,6 +31,10 @@ public abstract class GShape {
 	 * Finalize shape making. This method must contain finishResize() method.
 	 * */
 	public abstract GShape finalize(Color innerColor, Color lineColor);
+	/**
+	 * initialize + adjust angle
+	 * */
+	public abstract void resize(Point start, Point mouse);
 	/**
 	 * This method finalizes only resizing. finalize() method determines size, color, etc.
 	 * This method supplement setting() method.
@@ -47,7 +52,7 @@ public abstract class GShape {
 			g2D.setColor(innerColor);
 			g2D.fill(shape);
 		}
-		this.drawAnchors(g2D);
+//		this.drawAnchors(g2D);
 	}
 	/**See whether mouse is on this shape.
 	 * @param mouse Point that want to see if point is on this shape.
@@ -62,21 +67,32 @@ public abstract class GShape {
 	 * */
 	protected int[] transPoint(Point start, Point end) {
 		int[] point= new int[4];
-		int dx = start.x - end.x;
-		int dy = start.y - end.y;
+		int dx = end.x - start.x;
+		int dy = end.y - start.y;
 		if(dy>0) {
 			point[3]=dy;
-			point[1]=end.y;
+			point[1]=start.y;
+			if(dx>0) {
+				point[0]=start.x;
+				point[2]=dx;
+				this.quadrant = 4;
+			}else {
+				point[2]= -dx;
+				point[0]=end.x;
+				this.quadrant = 3;
+			}
 		}else {
 			point[3]= -dy;
-			point[1]=start.y;
-		}
-		if(dx>0) {
-			point[0]=end.x;
-			point[2]=dx;
-		}else {
-			point[0]=start.x;
-			point[2]= -dx;
+			point[1]=end.y;
+			if(dx>0) {
+				point[2]=dx;
+				point[0]=start.x;
+				this.quadrant = 1;
+			}else {
+				point[2]= -dx;
+				point[0]=end.x;
+				this.quadrant = 2;
+			}
 		}
 		return point;
 	}
@@ -92,7 +108,7 @@ public abstract class GShape {
 	}
 	/**Draw resize anchors. Use it inside draw(Graphics g) method.
 	 * @param g Graphics object.*/
-	protected void drawAnchors(Graphics g) {
+	public void drawAnchors(Graphics g) {
 		if(isSelected) {
 			g.setColor(Color.black);
 			g.drawRect(x, y, width, height);
@@ -111,7 +127,7 @@ public abstract class GShape {
 	 * @param I 3 - - - 7
 	 * @param I 0 - 1 - 2
 	 * @return 
-	 * Returns integer between -1 to 7. Returns -1 when no anchor is under the Point.
+	 * Returns byte between -1 and 7. Returns -1 when no anchor is under the Point.
 	 * The number represents an anchor. Follow the text up above.
 	 * */
 	public byte grabAnchor(Point mouse) {

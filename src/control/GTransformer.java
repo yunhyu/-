@@ -23,32 +23,10 @@ public class GTransformer {
 		DRAWINGPOLYGON,
 		MOVE,
 		RESIZE;
-		private byte anchorNum;
-//		private Point anchorPoint;
-		private Vector<Point> anchorPoint;
-		private Vector<Point> oppositePoint;
-		private GState() {
-			this.anchorPoint = new Vector<Point>();
-			this.oppositePoint = new Vector<Point>();
-		}
-		public void setAnchorNumber(byte num) {this.anchorNum = num;}
-		public byte getAnchorNumber() {return this.anchorNum;}
-		public void clearPoint() {
-			this.anchorPoint.clear();
-			this.oppositePoint.clear();
-		}
-		public void addAnchorPoint(Point anchor) {
-			this.anchorPoint.add(anchor);
-			}
-		public void addOppositePoint(Point anchor) {
-			this.oppositePoint.add(anchor);
-		}
-		public Vector<Point> getAnchorPoint() {return this.anchorPoint;}
-		public Vector<Point> getOppositePoint() {return this.oppositePoint;}
 	}
 	
-	private int veiwPoint;
-	private Color innerColor, lineColor;
+//	private int veiwPoint;
+	private boolean fixed;
 	private Point startPoint, previousPoint, currentPoint;
 	private GRectangle selectRange;
 	private GShape drawingShape;
@@ -57,17 +35,17 @@ public class GTransformer {
 	private GToolBar toolbar;
 	private GDrawingPanel canvus;
 	private GState state = GState.IDLE;
+	private AnchorStore anchors;
 	
 	public GTransformer() {
 		this.shapes = new Vector<GShape>();
 		this.selectedShapes = new Vector<Integer>();
 		this.selectRange = new GRectangle();
+		this.anchors = new AnchorStore();
 	}
 	public void initialize(GToolBar toolbar, GDrawingPanel gDrawingPanel) {
 		this.toolbar = toolbar;
 		this.canvus = gDrawingPanel;
-		this.innerColor = null;
-		this.lineColor = Color.black;
 		this.selectRange.finalize(new Color(230,255,255,80),new Color(200,235,235,255));
 	}
 	public void drawPaints(Graphics g) {
@@ -79,6 +57,10 @@ public class GTransformer {
 		for (int i=this.shapes.size()-1; i>-1;i--) {
 			GShape s = this.shapes.get(i);
 			s.draw(bfrG);
+		}
+		for (int i=this.selectedShapes.size()-1; i>-1;i--) {
+			GShape s = this.shapes.get(selectedShapes.get(i));
+			s.drawAnchors(bfrG);
 		}
 		g.drawImage(buffer, 0,0,null);
 	}
@@ -99,9 +81,9 @@ public class GTransformer {
 			}
 		}else if(action == GState.RESIZE) {
 //			System.out.println(action.getAnchorNumber());
-			byte anchorNum = action.getAnchorNumber();
-			Vector<Point> origin = action.getAnchorPoint();
-			Vector<Point> opposite = action.getOppositePoint();
+			byte anchorNum = anchors.getAnchorNumber();
+			Vector<Point> origin = anchors.getAnchorPoint();
+			Vector<Point> opposite = anchors.getOppositePoint();
 			boolean is37 = false;
 			boolean is15 = false;
 			if(anchorNum==3 || anchorNum==7) {
@@ -121,7 +103,7 @@ public class GTransformer {
 				}else {
 					dummy = p;
 				}
-				shape.initialize(opposite.get(i),dummy);
+				shape.resize(opposite.get(i),dummy);
 				shape.finishResize();
 			}
 		}
@@ -153,7 +135,7 @@ public class GTransformer {
 					byte inAnchor=shape.grabAnchor(startPoint);
 					if(inAnchor!=-1) {
 						this.state = GState.RESIZE;
-						this.state.setAnchorNumber(inAnchor);
+						this.anchors.setAnchorNumber(inAnchor);
 						setAnchorPoints(inAnchor);
 						notSelect = false;
 						break;
@@ -202,8 +184,8 @@ public class GTransformer {
 				p1 = shape.getAnchor(anchor);
 				p2 = shape.getAnchor(opposite);
 			}
-			this.state.addAnchorPoint(p1);
-			this.state.addOppositePoint(p2);
+			this.anchors.addAnchorPoint(p1);
+			this.anchors.addOppositePoint(p2);
 		}
 	}
 	public void keepTransforming(MouseEvent e) {
@@ -221,6 +203,8 @@ public class GTransformer {
 	}
 	public void finalizeTransforming(MouseEvent e) {
 		if(toolbar.getSelectedShape()!=EShape.SELECT) {
+			Color lineColor = this.toolbar.getLineColor();
+			Color innerColor = this.toolbar.getInnerColor();
 			this.drawingShape = drawingShape.finalize(innerColor, lineColor);
 			if(this.drawingShape!=null) {
 				this.shapes.setElementAt(drawingShape, 0);
@@ -244,7 +228,7 @@ public class GTransformer {
 			this.selectRange.reset();
 			this.drawPaints(this.canvus.getGraphics());
 		}else if(this.state == GState.RESIZE) {
-			this.state.clearPoint();
+			this.anchors.clearPoint();
 		}
 	}
 	public void mouseSingleClick(MouseEvent e) {
@@ -315,4 +299,47 @@ public class GTransformer {
 			this.drawPaints(this.canvus.getGraphics());
 		}
 	}
+	public void setInnerColor(Color color) {
+		for(Integer i : this.selectedShapes) {
+			this.shapes.get(i).setInnerColor(color);
+		}
+	}
+	public void setLineColor(Color color) {
+		for(Integer i : this.selectedShapes) {
+			this.shapes.get(i).setLineColor(color);
+		}
+	}
+	public void setFixed(boolean b) {
+		this.fixed = b;
+		System.out.println(this.fixed);
+	}
+//=====================================================================================	
+	
+	private class AnchorStore{
+
+		private byte anchorNum;
+		private Vector<Point> anchorPoint;
+		private Vector<Point> oppositePoint;
+		
+		private AnchorStore() {
+			this.anchorPoint = new Vector<Point>();
+			this.oppositePoint = new Vector<Point>();
+		
+		}
+		public void setAnchorNumber(byte num) {this.anchorNum = num;}
+		public byte getAnchorNumber() {return this.anchorNum;}
+		public void clearPoint() {
+			this.anchorPoint.clear();
+			this.oppositePoint.clear();
+		}
+		public void addAnchorPoint(Point anchor) {
+			this.anchorPoint.add(anchor);
+			}
+		public void addOppositePoint(Point anchor) {
+			this.oppositePoint.add(anchor);
+		}
+		public Vector<Point> getAnchorPoint() {return this.anchorPoint;}
+		public Vector<Point> getOppositePoint() {return this.oppositePoint;}
+	}
+
 }

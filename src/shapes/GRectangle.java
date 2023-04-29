@@ -4,6 +4,8 @@ import java.awt.Color;
 import java.awt.Point;
 import java.awt.geom.Rectangle2D;
 
+import javax.swing.border.Border;
+
 public class GRectangle extends GShape{
 
 	private Rectangle2D rect;
@@ -30,6 +32,10 @@ public class GRectangle extends GShape{
 		}
 		finishResize();
 		return this;
+	}
+	@Override
+	public void resize(Point start, Point end) {
+		this.initialize(start, end);
 	}
 	@Override
 	public void finishResize() {

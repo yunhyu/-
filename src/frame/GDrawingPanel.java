@@ -2,10 +2,12 @@ package frame;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 
+import javax.swing.JButton;
 import javax.swing.JPanel;
 
 import control.GTransformer;
@@ -22,6 +24,7 @@ public class GDrawingPanel extends JPanel {
 
 	public GDrawingPanel() {
 		super();
+		this.setLayout(null);
 		this.setBackground(Color.white);
 	}
 	public void initialize(GTransformer transformer) {
@@ -29,6 +32,13 @@ public class GDrawingPanel extends JPanel {
 		MouseHandler mouse = new MouseHandler();
 		this.addMouseMotionListener(mouse);
 		this.addMouseListener(mouse);
+	}
+	public void addToolPanel(Point addPoint) {
+		JPanel toolPanel = new JPanel();
+		toolPanel.setBounds(addPoint.x, addPoint.y, 100, 200);
+		toolPanel.setBackground(Color.red);
+		toolPanel.add(new JButton("asd"));
+		this.add(toolPanel);
 	}
 	@Override
 	public void paint(Graphics g) {
@@ -50,7 +60,11 @@ public class GDrawingPanel extends JPanel {
 		@Override
 		public void mouseClicked(MouseEvent e) {
 			if(e.getClickCount()==1) {
-				transformer.mouseSingleClick(e);
+				if(e.getButton()==3) {
+					addToolPanel(e.getPoint());
+				}else if(e.getButton()==1) {
+					transformer.mouseSingleClick(e);
+				}
 			}else if(e.getClickCount()==2) {
 				transformer.mouseDoubleClick(e);
 			}

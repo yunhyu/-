@@ -37,13 +37,9 @@ public class GFreeLine extends GShape{
 	
 	@Override
 	public void initialize(Point start, Point end) {
-		if(this.complete) {
-			this.resize(start, end);
-		}else {
-			this.setMaxMinCoordinate(end);
-			this.xCoordinate.add(end.x);
-			this.yCoordinate.add(end.y);
-		}
+		this.setMaxMinCoordinate(end);
+		this.xCoordinate.add(end.x);
+		this.yCoordinate.add(end.y);
 	}
 	protected void setMaxMinCoordinate(Point p) {
 		if (this.xCoordinate.size()==0) {
@@ -81,10 +77,11 @@ public class GFreeLine extends GShape{
 			return this;
 		}
 	}
-	protected void resize(Point start, Point end) {
+	@Override
+	public void resize(Point start, Point end) {
 		/* 6-4 - 앵커 위치
 		 * 0-2
-		 * 앵커는 움직이는 게 end, 반대편이 start임. 0 - 4 움직임에서 0이 4쪽으로 갈때는 rate가 줄어들지만, x좌표는 오히려
+		 * 앵커는 움직이는 게 end, 고정점이 start임. 0 - 4 움직임에서 0이 4쪽으로 갈때는 rate가 줄어들지만, x좌표는 오히려
 		 * 늘어남. 이걸 캐치해야함. => minX만큼 빼고 rate를 곱한 후 다시 minX를 더하는 방식으로?
 		 * 0 - 4움직임에선 maxX가 움직이면 안됨. 
 		 * 
