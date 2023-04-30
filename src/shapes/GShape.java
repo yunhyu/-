@@ -180,8 +180,8 @@ public abstract class GShape {
 	 * @param selected true to turn on selected mode. false to turn it off.*/
 	public void select(boolean selected) {this.isSelected = selected;}
 	public void setInnerColor(Color color) {this.innerColor = color;}
-	public void setLineColor(Color color) {this.innerColor = color;}
-	public Color getInnerColor() {return this.lineColor;}
+	public void setLineColor(Color color) {this.lineColor = color;}
+	public Color getInnerColor() {return this.innerColor;}
 	public Color getLineColor() {return this.lineColor;}
 	/**
 	 * Returns x, y coordinate and size. Width is x size, and height is y size. 

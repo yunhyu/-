@@ -11,7 +11,7 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 
 import control.GTransformer;
-import control.GTransformer.GState;
+import control.GTransformer.GDrawingState;
 
 public class GDrawingPanel extends JPanel {
 	
@@ -27,8 +27,10 @@ public class GDrawingPanel extends JPanel {
 		this.setLayout(null);
 		this.setBackground(Color.white);
 	}
-	public void initialize(GTransformer transformer) {
+	public void setTransformer(GTransformer transformer) {
 		this.transformer = transformer;
+	}
+	public void initialize() {
 		MouseHandler mouse = new MouseHandler();
 		this.addMouseMotionListener(mouse);
 		this.addMouseListener(mouse);
@@ -75,7 +77,7 @@ public class GDrawingPanel extends JPanel {
 		}
 		@Override
 		public void mouseReleased(MouseEvent e) {
-			if(!transformer.state(GState.DRAWINGPOLYGON)) {
+			if(!transformer.state(GDrawingState.DRAWINGPOLYGON)) {
 				transformer.finalizeTransforming(e);
 			}
 		}

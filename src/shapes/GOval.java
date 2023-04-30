@@ -50,15 +50,15 @@ public class GOval extends GShape{
 		this.focusPoint1 = focusPoint[0];
 		this.focusPoint2 = focusPoint[1];
 	}
-	@Override
-	public void draw(Graphics g) {
-		Graphics2D g2D = (Graphics2D)g;
-		g2D.setColor(lineColor);
-		if(this.lineColor!=null)g2D.draw(shape);
-		g2D.setColor(innerColor);
-		if(this.innerColor!=null)g2D.fill(shape);
-		this.drawAnchors(g2D);
-	}
+//	@Override
+//	public void draw(Graphics g) {
+//		Graphics2D g2D = (Graphics2D)g;
+//		g2D.setColor(lineColor);
+//		if(this.lineColor!=null)g2D.draw(shape);
+//		g2D.setColor(innerColor);
+//		if(this.innerColor!=null)g2D.fill(shape);
+//		this.drawAnchors(g2D);
+//	}
 	/**
 	 * Get oval's focus points in form of array.
 	 * @return Returns two focus point. focusPoint[0] >= 0 >= focusPoint[1]. 
@@ -78,31 +78,38 @@ public class GOval extends GShape{
 		return focusPoint;
 	}
 
-//	@Override
-//	public void draw(Graphics g) {
-//		g.drawOval(x, y, width, height);
-//		this.drawAnchors(g);
-////		if(this.isfpOnLong) {
-////			g.drawOval(this.focusPoint1-2, this.center[1]-2, 4, 4);
-////			g.drawOval(this.focusPoint2-2, this.center[1]-2, 4, 4);
-////			g.setColor(Color.blue);
-////			int[] fp = this.getFP((this.width/2)-4, (this.height/2)-4);
-////			g.drawOval(fp[0]-2, this.center[1]-2, 4, 4);
-////			g.drawOval(fp[1]-2, this.center[1]-2, 4, 4);
-////			g.drawOval(this.x+4, this.y+4, this.width-8, this.height-8);
-////			g.setColor(Color.black);
-////		}else {
-////			g.drawOval(this.center[0]-2, this.focusPoint1-2, 4, 4);
-////			g.drawOval(this.center[0]-2, this.focusPoint2-2, 4, 4);
-////			g.setColor(Color.blue);
-////			int[] fp = this.getFP((this.width/2)-4, (this.height/2)-4);
-////			g.drawOval(this.center[0]-2, fp[0]-2, 4, 4);
-////			g.drawOval(this.center[0]-2, fp[1]-2, 4, 4);
-////			g.drawOval(this.x+4, this.y+4, this.width-8, this.height-8);	
-////			g.setColor(Color.black);
-////		}
-////		System.out.println(this.focusPoint1+", "+this.focusPoint2);
-//	}
+	@Override
+	public void draw(Graphics g) {
+		if(this.lineColor!=null) {
+			g.setColor(lineColor);
+			g.drawOval(x, y, width, height);
+		}
+		if(this.innerColor!=null) {
+			g.setColor(innerColor);
+			g.fillOval(x, y, width, height);
+		}
+		this.drawAnchors(g);
+//		if(this.isfpOnLong) {
+//			g.drawOval(this.focusPoint1-2, this.center.y-2, 4, 4);
+//			g.drawOval(this.focusPoint2-2, this.center.y-2, 4, 4);
+//			g.setColor(Color.blue);
+//			int[] fp = this.getFP((this.width/2)-4, (this.height/2)-4);
+//			g.drawOval(fp[0]-2, this.center.y-2, 4, 4);
+//			g.drawOval(fp[1]-2, this.center.y-2, 4, 4);
+//			g.drawOval(this.x+4, this.y+4, this.width-8, this.height-8);
+//			g.setColor(Color.black);
+//		}else {
+//			g.drawOval(this.center.x-2, this.focusPoint1-2, 4, 4);
+//			g.drawOval(this.center.x-2, this.focusPoint2-2, 4, 4);
+//			g.setColor(Color.blue);
+//			int[] fp = this.getFP((this.width/2)-4, (this.height/2)-4);
+//			g.drawOval(this.center.x-2, fp[0]-2, 4, 4);
+//			g.drawOval(this.center.x-2, fp[1]-2, 4, 4);
+//			g.drawOval(this.x+4, this.y+4, this.width-8, this.height-8);	
+//			g.setColor(Color.black);
+//		}
+//		System.out.println(this.focusPoint1+", "+this.focusPoint2);
+	}
 	@Override
 	public void move(int dx, int dy) {
 		super.move(dx, dy);
@@ -115,26 +122,24 @@ public class GOval extends GShape{
 			this.focusPoint2+=dy;			
 		}
 	}
-//	@Override
-//	public boolean grab(Point mouse) {
-//		int f1 = this.focusPoint1;
-//		int f2 = this.focusPoint2;
-//		if(this.isfpOnLong) {
-//			if(mouse.distance(f1, this.center[1])+mouse.distance(f2, this.center[1])<this.width) {
-//				if(innerColor==null) {
-//					return mouse.distance(f1, this.center[1])+mouse.distance(f2, this.center[1])>this.width-6;
-//				}else return true;
-////				return true;
-//			}
-//			return false;
-//		}else {
-//			if(mouse.distance(this.center[0], f1)+mouse.distance(this.center[0], f2)<this.height) {
-//				if(innerColor==null) {
-//					return mouse.distance(this.center[0], f1)+mouse.distance(this.center[0], f2)>this.height-4;
-//				}else return true;
-////				return true;
-//			}
-//			return false;
-//		}
-//	}
+	@Override
+	public boolean grab(Point mouse) {
+		int f1 = this.focusPoint1;
+		int f2 = this.focusPoint2;
+		if(this.isfpOnLong) {
+			if(mouse.distance(f1, this.center.y)+mouse.distance(f2, this.center.y)<this.width) {
+				if(innerColor==null) {
+					return mouse.distance(f1, this.center.y)+mouse.distance(f2, this.center.y)>this.width-6;
+				}else return true;
+			}
+			return false;
+		}else {
+			if(mouse.distance(this.center.x, f1)+mouse.distance(this.center.x, f2)<this.height) {
+				if(innerColor==null) {
+					return mouse.distance(this.center.x, f1)+mouse.distance(this.center.x, f2)>this.height-4;
+				}else return true;
+			}
+			return false;
+		}
+	}
 }

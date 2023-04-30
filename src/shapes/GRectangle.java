@@ -70,15 +70,14 @@ public class GRectangle extends GShape{
 ////		g.drawRect(super.x+4, super.y+4, super.width-8, super.height-8);
 ////		g.setColor(Color.black);		
 //	}
-//	@Override
-//	public boolean grab(Point mouse) {
-//		if(this.isInRectRange(x, y, width, height, mouse)) {
-//			if(super.innerColor==null) {
-//				return !super.isInRectRange(x+4, y+4, width-8, height-8, mouse);
-//			}else {
-//				return true;
-//			}
-//		}
-//		return false;
-//	}
+	@Override
+	public boolean grab(Point mouse) {
+		if(this.isInRectRange(x-2, y-2, width+4, height+4, mouse)) {
+			if(super.innerColor!=null) {
+				return true;
+			}
+			return !super.isInRectRange(x+4, y+4, width-8, height-8, mouse);
+		}
+		return false;
+	}
 }

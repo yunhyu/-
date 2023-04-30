@@ -12,12 +12,13 @@ import java.util.Vector;
 import frame.GDrawingPanel;
 import frame.GToolBar;
 import frame.GToolBar.EShape;
+import frame.GToolBar.ETool;
 import shapes.GRectangle;
 import shapes.GShape;
 
 public class GTransformer {
 
-	public enum GState {
+	public enum GDrawingState {
 		IDLE,
 		DRAWING,
 		DRAWINGPOLYGON,
@@ -34,7 +35,8 @@ public class GTransformer {
 	private Vector<Integer> selectedShapes;
 	private GToolBar toolbar;
 	private GDrawingPanel canvus;
-	private GState state = GState.IDLE;
+	private ETool currentTool;
+	private GDrawingState state = GDrawingState.IDLE;
 	private AnchorStore anchors;
 	
 	public GTransformer() {
@@ -46,6 +48,8 @@ public class GTransformer {
 	public void initialize(GToolBar toolbar, GDrawingPanel gDrawingPanel) {
 		this.toolbar = toolbar;
 		this.canvus = gDrawingPanel;
+		this.currentTool = ETool.ESELECTINGTOOL;
+		this.setTools();
 		this.selectRange.finalize(new Color(230,255,255,80),new Color(200,235,235,255));
 	}
 	public void drawPaints(Graphics g) {
@@ -69,17 +73,17 @@ public class GTransformer {
 		this.drawPaints(this.canvus.getGraphics());
 	}
 	
-	public void selectedActions(Vector<Integer> selected, GState action){
+	public void selectedActions(Vector<Integer> selected, GDrawingState action){
 		int dx = this.currentPoint.x - this.previousPoint.x;
 		int dy = this.currentPoint.y - this.previousPoint.y;
-		if(action == GState.IDLE) {
+		if(action == GDrawingState.IDLE) {
 //			System.out.println(dx +", "+ dy);
 			this.selectRange.initialize(startPoint, currentPoint);
-		}else if(action == GState.MOVE) {
+		}else if(action == GDrawingState.MOVE) {
 			for(Integer i : selected) {
 				this.shapes.get(i).move(dx, dy);
 			}
-		}else if(action == GState.RESIZE) {
+		}else if(action == GDrawingState.RESIZE) {
 //			System.out.println(action.getAnchorNumber());
 			byte anchorNum = anchors.getAnchorNumber();
 			Vector<Point> origin = anchors.getAnchorPoint();
@@ -134,39 +138,39 @@ public class GTransformer {
 					GShape shape = shapes.get(i);
 					byte inAnchor=shape.grabAnchor(startPoint);
 					if(inAnchor!=-1) {
-						this.state = GState.RESIZE;
+						this.state = GDrawingState.RESIZE;
 						this.anchors.setAnchorNumber(inAnchor);
 						setAnchorPoints(inAnchor);
 						notSelect = false;
 						break;
 //						System.out.println("Captain!!!!!");
 					}else if(shape.grab(startPoint)) {
-						this.state = GState.MOVE;
+						this.state = GDrawingState.MOVE;
 						notSelect = false;
 						break;
 //						System.out.println("focused!!!   "+selectedObject);
 					}
 				}
 				if(notSelect) {
-					this.state = GState.IDLE;
+					this.state = GDrawingState.IDLE;
 					selectShape(-1);
 					this.shapes.add(0, this.selectRange);
 				}
 				System.out.println(this.state);
 			}else {
-				this.state = GState.IDLE;
+				this.state = GDrawingState.IDLE;
 				this.shapes.add(0, this.selectRange);
 			}
-		}else if(state != GState.DRAWINGPOLYGON){
+		}else if(state != GDrawingState.DRAWINGPOLYGON){
 			if(this.selectedShapes.size()!=0) this.selectShape(-1);
 			drawingShape = this.toolbar.generate(selected.getShape());
 			shapes.add(0, drawingShape);	
 			if(selected == EShape.EPOLYGON) {
-				this.state = GState.DRAWINGPOLYGON;
+				this.state = GDrawingState.DRAWINGPOLYGON;
 				this.drawingShape.addPoint(startPoint);
 				drawingShape.initialize(null, startPoint);
 			}else {
-				this.state = GState.DRAWING;
+				this.state = GDrawingState.DRAWING;
 			}
 		}
 	}
@@ -195,7 +199,7 @@ public class GTransformer {
 			if(this.selectedShapes.size()!=0) {
 				previousPoint = this.currentPoint;
 			}
-		}else if(state == GState.DRAWINGPOLYGON) {
+		}else if(state == GDrawingState.DRAWINGPOLYGON) {
 			drawingShape.initialize(null, currentPoint);
 			this.drawPaints(this.canvus.getGraphics());
 		}else draw();
@@ -203,18 +207,20 @@ public class GTransformer {
 	}
 	public void finalizeTransforming(MouseEvent e) {
 		if(toolbar.getSelectedShape()!=EShape.SELECT) {
-			Color lineColor = this.toolbar.getLineColor();
-			Color innerColor = this.toolbar.getInnerColor();
+			Color lineColor = this.toolbar.getDefaultLineColor();
+			Color innerColor = this.toolbar.getDefaultInnerColor();
 			this.drawingShape = drawingShape.finalize(innerColor, lineColor);
 			if(this.drawingShape!=null) {
 				this.shapes.setElementAt(drawingShape, 0);
 //				System.out.println(this.drawingShape);
 				this.selectShape(0);
+			}else {
+				this.shapes.remove(0);
 			}
 			drawingShape=null;
 			toolbar.setShape(EShape.SELECT);
-			this.state = GState.IDLE;
-		}else if (this.state == GState.IDLE) {
+			this.state = GDrawingState.IDLE;
+		}else if (this.state == GDrawingState.IDLE) {
 			this.shapes.remove(0);
 			
 			for (int i=0;i<this.shapes.size();i++) {
@@ -225,10 +231,31 @@ public class GTransformer {
 					this.selectedShapes.add(0, i);
 				}
 			}
+			this.setTools();
 			this.selectRange.reset();
 			this.drawPaints(this.canvus.getGraphics());
-		}else if(this.state == GState.RESIZE) {
+		}else if(this.state == GDrawingState.RESIZE) {
 			this.anchors.clearPoint();
+		}
+	}
+	private void setTools() {
+		ETool tool;
+		if(this.selectedShapes.size()!=0) {
+			tool = ETool.ESELECTINGTOOL;
+			Color line = null;
+			Color inner = null;
+			if(this.selectedShapes.size()==1) {
+				GShape shape = this.shapes.get(this.selectedShapes.get(0));
+				line = shape.getLineColor();
+				inner = shape.getInnerColor();
+			}
+			this.toolbar.setLineColor(line);
+			this.toolbar.setInnerColor(inner);
+		}
+		else tool = ETool.EDRAWINGTOOL; 
+		if(tool != this.currentTool) {
+			this.toolbar.setTools(tool);
+			this.currentTool = tool;
 		}
 	}
 	public void mouseSingleClick(MouseEvent e) {
@@ -252,18 +279,18 @@ public class GTransformer {
 					this.selectShape(-1);
 				}
 			}
-		}else if (state == GState.DRAWINGPOLYGON){
+		}else if (state == GDrawingState.DRAWINGPOLYGON){
 			this.drawingShape.addPoint(e.getPoint());
 		}
 	}
 	public void mouseDoubleClick(MouseEvent e) {
 		System.out.println("double clicked");
-		if(state == GState.DRAWINGPOLYGON) {
+		if(state == GDrawingState.DRAWINGPOLYGON) {
 			this.finalizeTransforming(null);
 		}
 	}
 	public void polygonAnimation(Point p) {
-		if(state == GState.DRAWINGPOLYGON) {
+		if(state == GDrawingState.DRAWINGPOLYGON) {
 			drawingShape.initialize(null, p);
 			this.drawPaints(this.canvus.getGraphics());
 		}
@@ -283,10 +310,11 @@ public class GTransformer {
 		if(index != -1) {
 			shapes.get(index).select(true);
 			this.selectedShapes.add(index);
+			this.setTools();
 		}
 		this.drawPaints(this.canvus.getGraphics());
 	}
-	public boolean state(GState s) {
+	public boolean state(GDrawingState s) {
 		return s == this.state;
 	}
 	
@@ -297,6 +325,14 @@ public class GTransformer {
 			}
 			this.selectedShapes.clear();
 			this.drawPaints(this.canvus.getGraphics());
+			this.setTools();
+		}
+	}
+	public void changeColor(Color inner, Color line) {
+		for(Integer i : this.selectedShapes) {
+			GShape shape = this.shapes.get(i);
+			shape.setInnerColor(inner);
+			shape.setLineColor(line);
 		}
 	}
 	public void setInnerColor(Color color) {
@@ -309,10 +345,42 @@ public class GTransformer {
 			this.shapes.get(i).setLineColor(color);
 		}
 	}
-	public void setFixed(boolean b) {
+	public void shiftDown(boolean b) {
 		this.fixed = b;
 		System.out.println(this.fixed);
 	}
+	public void goUp() {
+		GShape index0 = null;
+		for(Integer i : this.selectedShapes) {
+			GShape shape = this.shapes.get(i);
+			if(i==0) {
+				index0 = shape;
+				continue;
+			}
+			this.shapes.add(i-1,shape);
+			
+		}
+		if(index0 != null) {
+			this.shapes.add(0, index0);
+		}
+	}
+	public void goDown() {
+		GShape index0 = null;
+		for(Integer i : this.selectedShapes) {
+			GShape shape = this.shapes.get(i);
+			if(i==0) {
+				index0 = shape;
+				continue;
+			}
+			this.shapes.add(i+1,shape);
+			
+		}
+		if(index0 != null) {
+			this.shapes.add(1, index0);
+		}
+	}
+	
+	
 //=====================================================================================	
 	
 	private class AnchorStore{

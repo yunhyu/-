@@ -3,6 +3,7 @@ package shapes;
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.Polygon;
+import java.awt.Rectangle;
 
 public class GTriangle extends GShape {
 
@@ -30,7 +31,7 @@ public class GTriangle extends GShape {
 
 	@Override
 	public GShape finalize(Color innerColor, Color lineColor) {
-		if(this.width<1&&this.height<1) {
+		if(this.width<12&&this.height<12) {
 			return null;
 		}
 		this.innerColor = innerColor;
@@ -59,10 +60,26 @@ public class GTriangle extends GShape {
 		this.p2.setLocation(x+this.width, y);
 		this.movingP.setLocation(x+(this.width/2), this.y);
 		
-		this.polygon.reset();
-		this.polygon.addPoint(x, y);
-		this.polygon.addPoint(x+this.width, y);
-		this.polygon.addPoint(movingP.x, movingP.y);
+		setTriangle2(this.polygon, this.x, this.y, this.width, this.height);
+	}
+	private void setTriangle2(Polygon polygon, int x, int y, int w, int h) {
+		polygon.reset();
+		polygon.addPoint(x, y+h);
+		polygon.addPoint(x+w, y+h);
+		polygon.addPoint(x+(w/2),y);
 	}
 
+	@Override
+	public boolean grab(Point mouse) {
+		if(this.shape.contains(mouse)) {
+			if(super.innerColor!=null) {
+				return true;
+			}
+			Polygon ploygon = new Polygon();
+			setTriangle2(ploygon, x+6, y+6, width-12, height-12);
+			return !ploygon.contains(mouse);
+		}
+		return false;
+	}
+	
 }

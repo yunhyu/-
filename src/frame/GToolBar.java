@@ -1,9 +1,9 @@
 package frame;
 
 import java.awt.Color;
+import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -11,6 +11,7 @@ import java.awt.event.MouseListener;
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JComboBox;
+import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JToolBar;
 
@@ -19,16 +20,18 @@ import shapes.GShape;
 public class GToolBar extends JToolBar {
 
 	/**
-	 * 
+	 * -6044105974330751117L
 	 */
 	private static final long serialVersionUID = -6044105974330751117L;
 
-	private JComboBox<EColor> line, in;
+	private JPanel panel;
+	private JComboBox<EColor> line, in, defaultLine, defualtIn;
 	private ButtonGroup group;
 	private EShape selectedShape;
 	
 	public enum EShape{
 		ERECTANGLE(new ImageIcon("resource/square.png"), "shapes.GRectangle"),
+		EROUNDRECT(new ImageIcon("resource/roundrect.png"), "shapes.GRoundRect"),
 		EOVAL(new ImageIcon("resource/oval.png"), "shapes.GOval"),
 		ELINE(new ImageIcon("resource/line.png"), "shapes.GLine"),
 		ETRIANGLE(new ImageIcon("resource/triangle.png"), "shapes.GTriangle"),
@@ -50,6 +53,20 @@ public class GToolBar extends JToolBar {
 		}
 		
 	}
+	public enum ETool{
+		EDRAWINGTOOL(new JPanel()),
+		ESELECTINGTOOL(new JPanel());
+		
+		private JPanel panel;
+		
+		private ETool(JPanel panel) {
+			this.panel = panel;
+			panel.setLayout(new FlowLayout());
+		}
+		private JPanel getTools() {
+			return this.panel;
+		}
+	}
 	public enum EColor{
 		NONE(null),
 		RED(Color.red), 
@@ -68,13 +85,14 @@ public class GToolBar extends JToolBar {
 			return this.color;
 		}
 	}
-	
+//	JColorChooser
 	public GToolBar() {
 		super();
 		this.setFocusable(false);
-		this.requestFocusInWindow();
 		ListenerAction action = new ListenerAction();
 		group = new ButtonGroup();
+		this.panel = new JPanel();
+		JPanel panel = ETool.EDRAWINGTOOL.getTools();
 		
 		for(EShape e : EShape.values()) {
 			if(e == EShape.SELECT)continue;
@@ -84,22 +102,28 @@ public class GToolBar extends JToolBar {
 			button.addMouseListener(action);
 			button.setFocusable(false);
 			group.add(button);
-			this.add(button);
+			panel.add(button);
 		}
 		line = new JComboBox<EColor>();
 		in = new JComboBox<EColor>();
-		this.addColorBox(line, EColor.BLACK);
-		this.addColorBox(in, EColor.NONE);
+		this.addColorBox(line, EColor.BLACK, ETool.ESELECTINGTOOL);
+		this.addColorBox(in, EColor.NONE, ETool.ESELECTINGTOOL);
+		defaultLine = new JComboBox<EColor>();
+		defualtIn = new JComboBox<EColor>();
+		this.addColorBox(defaultLine, EColor.BLACK, ETool.EDRAWINGTOOL);
+		this.addColorBox(defualtIn, EColor.NONE, ETool.EDRAWINGTOOL);
 	}
-	private void addColorBox (JComboBox<EColor> box, EColor defaultColor) {
+	private void addColorBox (JComboBox<EColor> box, EColor defaultColor, ETool tool) {
 		for(EColor c:EColor.values()) {
 			box.addItem(c);
 		}
 		box.setSelectedItem(defaultColor);
 		box.setFocusable(false);
-		this.add(box);
+		tool.getTools().add(box);
 	}
-	public void initialize() {
+	public void initialize(ItemListener listener) {
+		this.line.addItemListener(listener);
+		this.in.addItemListener(listener);
 		this.selectedShape = EShape.SELECT;
 		this.setShape(EShape.SELECT);
 	}
@@ -107,16 +131,22 @@ public class GToolBar extends JToolBar {
 	 * @param eButtonShape The shape to select.*/
 	public void setShape(EShape eButtonShape) {
 		JRadioButton button;
+		JPanel panel = ETool.EDRAWINGTOOL.getTools();
 		if(this.selectedShape != EShape.SELECT) {
-			button = (JRadioButton)(this.getComponent(this.selectedShape.ordinal()));
+			button = (JRadioButton)(panel.getComponent(this.selectedShape.ordinal()));
 			button.setBackground(null);
 		}
 		if(eButtonShape != EShape.SELECT) {
-			button = (JRadioButton)(this.getComponent(eButtonShape.ordinal()));
-//			button.setBackground(null);
-//			button.setBackground(Color.LIGHT_GRAY);
+			button = (JRadioButton)(panel.getComponent(eButtonShape.ordinal()));
 		}else this.group.clearSelection();
 		this.selectedShape = eButtonShape;
+	}
+	
+	public void setTools(ETool tool) {
+		this.removeAll();
+		this.add(tool.getTools());
+		this.paintAll(getGraphics());
+//		System.out.println(tool.getTools().getComponentCount()+", "+this.countComponents());
 	}
 	public EShape getSelectedShape() {
 		return this.selectedShape;
@@ -133,13 +163,40 @@ public class GToolBar extends JToolBar {
 			return null;
 		}
 	}
+	public Color getDefaultLineColor() {
+		return this.getEColor(this.defaultLine);
+	}
+	public Color getDefaultInnerColor() {
+		return this.getEColor(this.defualtIn);
+	}
 	public Color getLineColor() {
-		EColor eColor = (EColor)this.line.getSelectedItem();
-		return eColor.getColor();
+		return this.getEColor(line);
 	}
 	public Color getInnerColor() {
-		EColor eColor = (EColor)this.in.getSelectedItem();
+		return this.getEColor(in);
+	}
+	private Color getEColor(JComboBox<EColor> box) {
+		EColor eColor = (EColor)box.getSelectedItem();
 		return eColor.getColor();
+	}
+	
+	public void setLineColor(Color c) {
+		this.setEColor(line, c);
+	}
+	public void setInnerColor(Color c) {
+		this.setEColor(in, c);
+	}
+	private void setEColor(JComboBox<EColor> box, Color c) {
+		if(c==null) {
+			box.setSelectedItem(EColor.NONE);
+		}else {
+			for(EColor eColor : EColor.values()) {
+				if(c.equals(eColor.getColor())) {
+					box.setSelectedItem(eColor);
+					break;
+				}
+			}
+		}
 	}
 //==================================================================================
 	private class ListenerAction implements ActionListener, MouseListener{
