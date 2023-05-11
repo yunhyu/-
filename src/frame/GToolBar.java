@@ -9,12 +9,12 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
 import javax.swing.ButtonGroup;
-import javax.swing.ImageIcon;
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JToolBar;
 
+import main.GContants.EShape;
 import shapes.GShape;
 
 public class GToolBar extends JToolBar {
@@ -24,35 +24,11 @@ public class GToolBar extends JToolBar {
 	 */
 	private static final long serialVersionUID = -6044105974330751117L;
 
-	private JPanel panel;
+	private ItemListener itemHandler;
 	private JComboBox<EColor> line, in, defaultLine, defualtIn;
 	private ButtonGroup group;
 	private EShape selectedShape;
 	
-	public enum EShape{
-		ERECTANGLE(new ImageIcon("resource/square.png"), "shapes.GRectangle"),
-		EROUNDRECT(new ImageIcon("resource/roundrect.png"), "shapes.GRoundRect"),
-		EOVAL(new ImageIcon("resource/oval.png"), "shapes.GOval"),
-		ELINE(new ImageIcon("resource/line.png"), "shapes.GLine"),
-		ETRIANGLE(new ImageIcon("resource/triangle.png"), "shapes.GTriangle"),
-		EFREELINE(new ImageIcon("resource/free.png"), "shapes.GFreeLine"),
-		EPOLYGON(new ImageIcon("resource/polygon.png"), "shapes.GPolygon"),
-		SELECT(new ImageIcon("resource/select.png"), null);
-
-		private String shape;
-		private ImageIcon image;
-		private EShape(ImageIcon name, String shape) {
-			this.image = name;
-			this.shape = shape;
-		}
-		public ImageIcon getImage() {
-			return this.image;
-		}
-		public String getShape() {
-			return this.shape;
-		}
-		
-	}
 	public enum ETool{
 		EDRAWINGTOOL(new JPanel()),
 		ESELECTINGTOOL(new JPanel());
@@ -91,7 +67,6 @@ public class GToolBar extends JToolBar {
 		this.setFocusable(false);
 		ListenerAction action = new ListenerAction();
 		group = new ButtonGroup();
-		this.panel = new JPanel();
 		JPanel panel = ETool.EDRAWINGTOOL.getTools();
 		
 		for(EShape e : EShape.values()) {
@@ -122,10 +97,9 @@ public class GToolBar extends JToolBar {
 		tool.getTools().add(box);
 	}
 	public void initialize(ItemListener listener) {
-		this.line.addItemListener(listener);
-		this.in.addItemListener(listener);
 		this.selectedShape = EShape.SELECT;
 		this.setShape(EShape.SELECT);
+		this.itemHandler = listener;
 	}
 	/**Select shapeButton
 	 * @param eButtonShape The shape to select.*/
@@ -144,6 +118,13 @@ public class GToolBar extends JToolBar {
 	
 	public void setTools(ETool tool) {
 		this.removeAll();
+		if(tool == ETool.ESELECTINGTOOL) {
+			this.line.addItemListener(this.itemHandler);
+			this.in.addItemListener(this.itemHandler);
+		}else {
+			this.line.removeItemListener(itemHandler);
+			this.in.removeItemListener(itemHandler);
+		}
 		this.add(tool.getTools());
 		this.paintAll(getGraphics());
 //		System.out.println(tool.getTools().getComponentCount()+", "+this.countComponents());

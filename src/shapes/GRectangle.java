@@ -16,12 +16,7 @@ public class GRectangle extends GShape{
 	}
 	@Override
 	public void initialize(Point start, Point end) {
-		int[] dummy = super.transPoint(start, end);
-		this.x = dummy[0];
-		this.y = dummy[1];
-		this.width = dummy[2];
-		this.height = dummy[3];
-		this.rect.setRect(x, y, width, height);
+		this.resize(start, end);
 	}
 	@Override
 	public GShape finalize(Color innerColor, Color lineColor) {
@@ -35,11 +30,12 @@ public class GRectangle extends GShape{
 	}
 	@Override
 	public void resize(Point start, Point end) {
-		this.initialize(start, end);
+		int[] dummy = super.transPoint(start, end);
+		this.setAnchorBounds(dummy[0],dummy[1],dummy[2],dummy[3]);
+		this.rect.setRect(x, y, width, height);
 	}
 	@Override
 	public void finishResize() {
-		this.center.setLocation(x+(width/2), y+(height/2));
 		this.setAnchorLocation();
 	}
 	@Override
@@ -71,7 +67,7 @@ public class GRectangle extends GShape{
 ////		g.setColor(Color.black);		
 //	}
 	@Override
-	public boolean grab(Point mouse) {
+	public boolean onShape(Point mouse) {
 		if(this.isInRectRange(x-2, y-2, width+4, height+4, mouse)) {
 			if(super.innerColor!=null) {
 				return true;

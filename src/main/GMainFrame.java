@@ -15,10 +15,10 @@ import java.awt.event.KeyListener;
 
 import javax.swing.JFrame;
 
-import control.GTransformer;
 import frame.GDrawingPanel;
 import frame.GMenuBar;
 import frame.GToolBar;
+import transformer.GTransformer;
 
 public class GMainFrame extends JFrame {
 
@@ -30,7 +30,6 @@ public class GMainFrame extends JFrame {
 	private GToolBar toolBar;
 	private GMenuBar menuBar;
 	private GDrawingPanel canvus;
-	private GTransformer transformer;
 //	private ListenerAction action;
 	private BorderLayout layout;
 	
@@ -39,17 +38,16 @@ public class GMainFrame extends JFrame {
 	public GMainFrame(String title, GraphicsConfiguration gc) {super(title, gc);}
 
 	public GMainFrame() throws HeadlessException {
-		this.setSize(600, 400);
+		this.setSize(GContants.CMainframe.SIZE);
 		this.setLocationRelativeTo(null);
 		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
 		Toolkit toolkit = Toolkit.getDefaultToolkit();
-		Image img = toolkit.getImage("resource/mju.png");
+		Image img = toolkit.getImage(GContants.CMainframe.ICON);
 		this.setIconImage(img); // 이미지 아이콘 세팅
-	    setTitle("그림판"); // 제목
+	    setTitle(GContants.CMainframe.TITLE); // 제목
 		
 		this.menuBar = new GMenuBar();
 		this.toolBar = new GToolBar();
-		this.transformer = new GTransformer();
 		this.canvus = new GDrawingPanel();
 //		this.action = new ListenerAction();
 		
@@ -59,30 +57,27 @@ public class GMainFrame extends JFrame {
 //		this.getContentPane().add(toolBar,BorderLayout.NORTH);
 		this.add(toolBar,BorderLayout.NORTH);
 		this.add(canvus,BorderLayout.CENTER);
-		
-		this.canvus.setTransformer(transformer);
 	}
 	public void initialize() {
 		this.toolBar.initialize(new ColorHandler());
-		this.canvus.initialize();
+		this.canvus.initialize(this.toolBar);
 		this.setVisible(true);
 		
 		EKeyHandler keyboard = new EKeyHandler();
-		this.transformer.initialize(this.toolBar, this.canvus);
-		
 		this.addKeyListener(keyboard);
-//		this.requestFocus();
+		this.requestFocus();
 	}
 	private void reset() {
 		this.toolBar.initialize(new ColorHandler());
-		this.canvus.initialize();
-		this.transformer.initialize(this.toolBar, this.canvus);
+		this.canvus.initialize(this.toolBar);
 	}
 	private void setColor() {
 		Color in = this.toolBar.getInnerColor();
 		Color line = this.toolBar.getLineColor();
-		this.transformer.changeColor(in, line);
-		this.transformer.drawPaints(this.canvus.getGraphics());
+//		if(transformer.getNumOfSelected()==1) {
+			this.canvus.changeColor(in, line);
+//		}
+		this.canvus.drawPaints(this.canvus.getGraphics());
 	}
 	
 //===============================================================================
@@ -97,7 +92,7 @@ public class GMainFrame extends JFrame {
 				
 			}
 			else if(input==127) {
-				transformer.deleteSelectedShape();
+				canvus.deleteSelectedShape();
 			}else if(input>7&&input<127) {
 				
 			}
@@ -107,7 +102,7 @@ public class GMainFrame extends JFrame {
 		public void keyPressed(KeyEvent e) {
 			System.out.println("pressed");
 			if(e.isShiftDown()) {
-				transformer.shiftDown(true);
+				canvus.shiftDown(true);
 			}
 		}
 
@@ -115,7 +110,7 @@ public class GMainFrame extends JFrame {
 		public void keyReleased(KeyEvent e) {
 			System.out.println("released");
 			if(!e.isShiftDown()) {
-				transformer.shiftDown(false);
+				canvus.shiftDown(false);
 			}
 		}
 		

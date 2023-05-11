@@ -13,7 +13,6 @@ public class GLine extends GShape{
 	public GLine() {
 		super();
 		this.isSelected = false;
-		this.center = new Point();
 		this.shape = new Line2D.Double();
 		this.line = (Line2D)this.shape;
 	}
@@ -21,8 +20,6 @@ public class GLine extends GShape{
 	@Override
 	public void initialize(Point start, Point end) {
 		line.setLine(start, end);
-//		int[] dummy = this.transPoint(start, end);
-//		line.setLine(dummy[0], dummy[1], dummy[0]+dummy[2], dummy[1]+dummy[3]);
 	}
 
 	@Override
@@ -34,9 +31,9 @@ public class GLine extends GShape{
 	}
 	@Override
 	public void resize(Point start, Point end) {
-		int dx = end.x - start.x;
-		int dy = end.y - start.y;
-		Point p1, p2;
+//		int dx = end.x - start.x;
+//		int dy = end.y - start.y;
+//		Point p1, p2;
 //		if(this.quadrant%2==0) {
 //			this.initialize(start, end);
 //			if(dx<0) {
@@ -57,15 +54,11 @@ public class GLine extends GShape{
 		p1.setLocation(line.getP1());
 		p2.setLocation(line.getP2());
 		int[] dummy = this.transPoint(p1, p2);
-		this.x = dummy[0];
-		this.y = dummy[1];
-		this.width = dummy[2];
-		this.height = dummy[3];
-		this.center.setLocation(dummy[0]+(dummy[2]/2), dummy[1]+(dummy[3]/2));
+		this.setAnchorBounds(dummy[0],dummy[1],dummy[2],dummy[3]);
 		this.setAnchorLocation();
 	}
 	@Override
-	public boolean grab(Point mouse) {
+	public boolean onShape(Point mouse) {
 		return this.line.ptLineDist(mouse)<3;
 	}
 	@Override
@@ -98,17 +91,17 @@ public class GLine extends GShape{
 //		else if(super.isInRectRange(x+width-2, y+height-2, 4, 4, mouse))return 2;
 //		return -1;
 //	}
-//	@Override
-//	public void drawAnchors(Graphics g) {
-//		if(isSelected) {
-//			g.setColor(Color.white);
-//			g.fillRect((int)(line.getX1()-2), (int)(line.getY1()-2), 4, 4);
-//			g.fillRect((int)(line.getX2()-2), (int)(line.getY2()-2), 4, 4);
-//			g.setColor(Color.black);
-//			g.drawRect((int)(line.getX1()-2), (int)(line.getY1()-2), 4, 4);
-//			g.drawRect((int)(line.getX2()-2), (int)(line.getY2()-2), 4, 4);
-//		}
-//	}
+	@Override
+	public void drawAnchors(Graphics g) {
+		if(isSelected) {
+			g.setColor(Color.white);
+			g.fillRect((int)(line.getX1()-2), (int)(line.getY1()-2), 4, 4);
+			g.fillRect((int)(line.getX2()-2), (int)(line.getY2()-2), 4, 4);
+			g.setColor(Color.black);
+			g.drawRect((int)(line.getX1()-2), (int)(line.getY1()-2), 4, 4);
+			g.drawRect((int)(line.getX2()-2), (int)(line.getY2()-2), 4, 4);
+		}
+	}
 //	@Override
 //	public Point getAnchor(byte anchorNum) {
 //		Point dummy = new Point();

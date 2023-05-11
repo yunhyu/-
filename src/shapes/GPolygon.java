@@ -67,10 +67,7 @@ public class GPolygon extends GFreeLine {
 		finishResize();
 		return this;
 	}
-	@Override
-	public void resize(Point start, Point end) {
-		
-	}
+	
 	@Override
 	public void addPoint(Point p) {
 		int size = this.xCoordinate.size()-1;
@@ -84,13 +81,13 @@ public class GPolygon extends GFreeLine {
 	public void draw(Graphics g) {
 		Graphics2D g2D = (Graphics2D)g;
 		if(this.complete) {
-			if(this.lineColor!=null) {
-				g2D.setColor(lineColor);
-				g2D.draw(shape);
-			}
 			if(this.innerColor!=null) {
 				g2D.setColor(innerColor);
 				g2D.fill(shape);
+			}
+			if(this.lineColor!=null) {
+				g2D.setColor(lineColor);
+				g2D.draw(shape);
 			}
 		}else {
 			super.draw(g2D);
@@ -101,7 +98,7 @@ public class GPolygon extends GFreeLine {
 		this.drawAnchors(g2D);
 	}
 	@Override
-	public boolean grab(Point mouse) {
+	public boolean onShape(Point mouse) {
 		return this.polygon.contains(mouse);
 	}
 	@Override

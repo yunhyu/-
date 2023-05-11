@@ -7,6 +7,8 @@ import java.awt.Rectangle;
 import java.util.Collection;
 import java.util.Vector;
 
+import valueObject.GShapeInfo;
+
 public class GFreeLine extends GShape{
 	
 
@@ -110,11 +112,7 @@ public class GFreeLine extends GShape{
 	}
 	@Override
 	public void finishResize() {
-		this.x = this.minX;
-		this.y = this.minY;
-		this.width = this.maxX - this.minX;
-		this.height = this.maxY - this.minY;
-		this.center.setLocation(x+(width/2), y+(height/2));
+		this.setAnchorBounds(minX, minY, this.maxX - this.minX, this.maxY - this.minY);
 		this.setAnchorLocation();
 	}
 
@@ -129,11 +127,10 @@ public class GFreeLine extends GShape{
 				int y2 = this.yCoordinate.get(i+1);
 				g.drawLine(x1,y1,x2,y2);
 			}
-			this.drawAnchors(g);
 		}
 	}
 	@Override
-	public boolean grab(Point mouse) {
+	public boolean onShape(Point mouse) {
 		if(this.xCoordinate.size()<=2 || !this.isInRectRange(x, y, width, height, mouse)) {
 			return false;	
 		}
@@ -154,5 +151,19 @@ public class GFreeLine extends GShape{
 		this.minX+=dx;
 		this.maxY+=dy;
 		this.minY+=dy;
+	}
+
+	@Override
+	public void setAtribute(GShapeInfo info){
+		super.setAtribute(info);
+		this.xCoordinate = info.getXCoordinate();
+		this.yCoordinate = info.getYCoordinate();
+	}
+	
+	@Override
+	public GShapeInfo getAllAttribute() {
+		GShapeInfo info = super.getAllAttribute();
+		info.setXYCoordinate(xCoordinate, yCoordinate);
+		return info;
 	}
 }

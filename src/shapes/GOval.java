@@ -19,13 +19,7 @@ public class GOval extends GShape{
 	}
 	@Override
 	public void initialize(Point start, Point end) {
-		int[] dummy = super.transPoint(start, end);
-		this.x = dummy[0];
-		this.y = dummy[1];
-		this.width = dummy[2];
-		this.height = dummy[3];
-		this.oval.setFrame(x, y, width, height);
-//		System.out.println(this.focusPoint1+", "+this.focusPoint2);
+		this.resize(start, end);
 	}
 	public GShape finalize(Color innerColor, Color lineColor) {
 		if(this.width<1&&this.height<1) {
@@ -38,7 +32,9 @@ public class GOval extends GShape{
 	}
 	@Override
 	public void resize(Point start, Point end) {
-		this.initialize(start, end);
+		int[] dummy = super.transPoint(start, end);
+		this.setAnchorBounds(dummy[0],dummy[1],dummy[2],dummy[3]);
+		this.oval.setFrame(x, y, width, height);
 	}
 	@Override
 	public void finishResize() {
@@ -50,15 +46,6 @@ public class GOval extends GShape{
 		this.focusPoint1 = focusPoint[0];
 		this.focusPoint2 = focusPoint[1];
 	}
-//	@Override
-//	public void draw(Graphics g) {
-//		Graphics2D g2D = (Graphics2D)g;
-//		g2D.setColor(lineColor);
-//		if(this.lineColor!=null)g2D.draw(shape);
-//		g2D.setColor(innerColor);
-//		if(this.innerColor!=null)g2D.fill(shape);
-//		this.drawAnchors(g2D);
-//	}
 	/**
 	 * Get oval's focus points in form of array.
 	 * @return Returns two focus point. focusPoint[0] >= 0 >= focusPoint[1]. 
@@ -80,13 +67,13 @@ public class GOval extends GShape{
 
 	@Override
 	public void draw(Graphics g) {
-		if(this.lineColor!=null) {
-			g.setColor(lineColor);
-			g.drawOval(x, y, width, height);
-		}
 		if(this.innerColor!=null) {
 			g.setColor(innerColor);
 			g.fillOval(x, y, width, height);
+		}
+		if(this.lineColor!=null) {
+			g.setColor(lineColor);
+			g.drawOval(x, y, width, height);
 		}
 		this.drawAnchors(g);
 //		if(this.isfpOnLong) {
@@ -123,7 +110,7 @@ public class GOval extends GShape{
 		}
 	}
 	@Override
-	public boolean grab(Point mouse) {
+	public boolean onShape(Point mouse) {
 		int f1 = this.focusPoint1;
 		int f2 = this.focusPoint2;
 		if(this.isfpOnLong) {

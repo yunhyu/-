@@ -5,24 +5,31 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Shape;
+import java.awt.geom.Ellipse2D;
+import java.util.Vector;
+
+import valueObject.GShapeInfo;
 
 public abstract class GShape {
 
 	private int[] anchorX, anchorY;
 	protected int x,y,height,width, angle;
-	protected byte quadrant;
-	protected Point center;
+	protected Point center, axis;
 	protected boolean isSelected;
+	protected boolean isGroupChild = false;
 	protected Shape shape;
+	protected Vector<Ellipse2D> shearAnchor;
 	protected Color innerColor, lineColor;
 	
 	public GShape(){
 		this.center = new Point();
 		this.isSelected = false;
 		this.lineColor = new Color(30, 30, 30, 100);
+		this.shearAnchor = new Vector<Ellipse2D>();
 		this.anchorX = new int[8];
 		this.anchorY = new int[8];
 	}
+	
 	/**for other shape*/
 	public abstract void initialize(Point start, Point mouse);
 	/**Only for Polygon.*/
@@ -44,20 +51,19 @@ public abstract class GShape {
 	 * @param g Graphics object. Get it from where to draw this shape.*/
 	public void draw(Graphics g) {
 		Graphics2D g2D = (Graphics2D)g;
-		if(this.lineColor!=null) {
-			g2D.setColor(lineColor);
-			g2D.draw(shape);
-		}
 		if(this.innerColor!=null) {
 			g2D.setColor(innerColor);
 			g2D.fill(shape);
 		}
-//		this.drawAnchors(g2D);
+		if(this.lineColor!=null) {
+			g2D.setColor(lineColor);
+			g2D.draw(shape);
+		}
 	}
 	/**See whether mouse is on this shape.
 	 * @param mouse Point that want to see if point is on this shape.
 	 * @return Return true if Point is in this shape's range. Else return false.*/
-	public boolean grab(Point mouse) {
+	public boolean onShape(Point mouse) {
 		return this.shape.contains(mouse);
 	};
 	/**
@@ -72,27 +78,16 @@ public abstract class GShape {
 		if(dy>0) {
 			point[3]=dy;
 			point[1]=start.y;
-			if(dx>0) {
-				point[0]=start.x;
-				point[2]=dx;
-				this.quadrant = 4;
-			}else {
-				point[2]= -dx;
-				point[0]=end.x;
-				this.quadrant = 3;
-			}
 		}else {
 			point[3]= -dy;
 			point[1]=end.y;
-			if(dx>0) {
-				point[2]=dx;
-				point[0]=start.x;
-				this.quadrant = 1;
-			}else {
-				point[2]= -dx;
-				point[0]=end.x;
-				this.quadrant = 2;
-			}
+		}
+		if(dx>0) {
+			point[0]=start.x;
+			point[2]=dx;
+		}else {
+			point[2]= -dx;
+			point[0]=end.x;
 		}
 		return point;
 	}
@@ -130,7 +125,7 @@ public abstract class GShape {
 	 * Returns byte between -1 and 7. Returns -1 when no anchor is under the Point.
 	 * The number represents an anchor. Follow the text up above.
 	 * */
-	public byte grabAnchor(Point mouse) {
+	public byte grabResize(Point mouse) {
 		for (byte i=0;i<8;i++) if(isInRectRange(this.anchorX[i]-3,this.anchorY[i]-3,6,6,mouse)) {
 			System.out.println(i);
 			return i;
@@ -149,6 +144,24 @@ public abstract class GShape {
 	protected boolean isInRectRange(int x, int y, int width, int height, Point mouse) {
 		return x<mouse.x&&x+width>mouse.x&&y<mouse.y&&y+height>mouse.y;
 	}
+	protected void addShear() {
+		
+	}
+	/**
+	 * See whether the Point is on shearAnchor.
+	 * @return -1 is no searAnchor is under the Point.
+	 * */
+	public int grabShear(Point mouse) {
+		for(int i=0; i<this.shearAnchor.size();i++) {
+			if(this.shearAnchor.get(i).contains(mouse))return i;
+		}
+		return -1;
+	}
+	
+	/**
+	 * Override to use.
+	 * */
+	public void shear(int shearAnchor) {}
 	/**
 	 * Save all anchor's location according to anchor number. 
 	 * Anchors are on every edge and side from a rectangle which has same location, size attribute.
@@ -177,31 +190,76 @@ public abstract class GShape {
 		this.anchorX[4]=this.x+this.width;
 	}
 	/**Turn on/off selected mode.
-	 * @param selected true to turn on selected mode. false to turn it off.*/
+	 * @param selected true to turn on selected mode. false to turn it off.
+	 * */
 	public void select(boolean selected) {this.isSelected = selected;}
+	
+	public void group(boolean group) {this.isGroupChild = group;}
+	/**
+	 * Set x, y, width, height and center. These are used to set anchor.
+	 * */
+	public void setAnchorBounds(int x, int y, int width, int height) {
+		this.x = x;
+		this.y = y;
+		this.height = height;
+		this.width = width;
+		this.setCenter(x+(width/2), y+(height/2));
+	}
+	public void setCenter(int centerX, int centerY) {this.center.setLocation(centerX, centerY);}
 	public void setInnerColor(Color color) {this.innerColor = color;}
 	public void setLineColor(Color color) {this.lineColor = color;}
+	public void setAxis(int x, int y) {this.axis.setLocation(x, y);}
+	
+	public int getX() {return x;}
+	public int getY() {return y;}
+	public int getHeight() {return height;}
+	public int getWidth() {return width;}
+	public boolean isSelected() {return this.isSelected;}
+	public boolean isGrouped() {return this.isGroupChild;}
+	public Point getCenter() {return this.center;}
 	public Color getInnerColor() {return this.innerColor;}
 	public Color getLineColor() {return this.lineColor;}
 	/**
-	 * Returns x, y coordinate and size. Width is x size, and height is y size. 
-	 * @return int[] bounds = {x,y,width,height}
+	 * Returns x, y coordinate and size. Width is delta x, and height is delta y. 
+	 * @return int[] bounds = {x, y, width, height}
 	 * */
-	public int[] getBounds() {
+	public int[] getAnchorBounds() {
 		int[] dummy = {x,y,width,height};
 		return dummy;
 	}
-	public Point getCenter() {return this.center;}
+	public Point getAxis() {return this.axis;}
 	/**
 	 * @return Returns anchor's coordinate. 
 	 * */
 	public Point getAnchor(byte anchorNum) {
 		return new Point(this.anchorX[anchorNum],this.anchorY[anchorNum]);
 	}
-	/**for test*/
-	public void print(String str) {System.out.println(str);}
-	/**for test*/
-	public void print(int i) {System.out.println(i);}
-	/**for test*/
-	public void print(Point p) {System.out.println("yeahA\t\t"+p);}
+	/**
+	 * Make this object to follow GShapeInfo's attribute.
+	 * */
+	public void setAtribute(GShapeInfo info){
+		this.x = info.getX();
+		this.y = info.getY();
+		this.width = info.getWidth();
+		this.height = info.getHeight();
+		this.center = info.getCenter();
+		this.axis = info.getAxis();
+		this.shape = info.getShape();
+		this.innerColor = info.getInnerColor();
+		this.lineColor = info.getLineColor();
+		this.setAnchorLocation();
+	}
+	/**
+	 * @return GShapeInfo object that contains all attributes. 
+	 * You can make clones of this GShape object to use setAtribute() method.
+	 * */
+	public GShapeInfo getAllAttribute() {
+		GShapeInfo info = new GShapeInfo();
+		info.setBounds(x, y, width, height);
+		info.setAxis(this.axis);
+		info.setInnerColor(innerColor);
+		info.setLineColor(lineColor);
+		info.setShape(shape);
+		return info;
+	}
 }
