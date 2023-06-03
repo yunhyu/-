@@ -8,18 +8,26 @@ import shapes.GShape;
 
 public class GDrawer extends GTransformer {
 
-	public GDrawer(Vector<GShape> drawingShape, Vector<Integer> selected) {
-		super(drawingShape, selected);
+	public GDrawer(GShape drawingShape) {
+		super(drawingShape);
 	}
 
 	@Override
-	public void keep(Point end) {
-		this.shape.initialize(start, end);
+	public void initTransform(Point start) {
+		shape.initialize(start);
+	}
+	@Override
+	public void keepTransform(Point end) {
+		shape.keep(end);
+	}
+	@Override
+	public void continueTransform(Point p) {
+		shape.addPoint(p);
 	}
 
 	@Override
-	public GShape finalize(Color in, Color line) {
-		return this.shape.finalize(in, line);
+	public GShape finalizeTransform(Color in, Color line) {
+		return shape.finalize(in, line);
 	}
 
 }

@@ -11,37 +11,38 @@ import shapes.GShape;
 public class GSelecter extends GTransformer {
 
 	private GRectangle selecter;
+	private Vector<GShape> shapes;
 	
-	public GSelecter(Vector<GShape> drawingShape, Vector<Integer> selected) {
-		super(drawingShape, selected);
+	public GSelecter(Vector<GShape> shapes) {
 		this.selecter = new GRectangle();
-		this.shape = this.selecter;
-		this.selecter.finalize(new Color(230,255,255,80),new Color(200,235,235,255));
+		this.shapes = shapes;
 	}
 
 	@Override
-	public void prepare(Point start) {
+	public void initTransform(Point start) {
 		this.start = start;
-		this.allShapes.add(0, selecter);
+		this.shapes.add(0, selecter);
+		this.selecter.initialize(this.start);
+		this.selecter.finalize(new Color(230,255,255,80),new Color(200,235,235,255));
 	}
 	
 	@Override
-	public void keep(Point end) {
-		this.shape.initialize(this.start, end);
+	public void keepTransform(Point end) {
+		this.selecter.keep(end);
 	}
 	
 	@Override
-	public GShape finalize(Color in, Color line) {
-		this.allShapes.remove(0);
+	public GShape finalizeTransform(Color in, Color line) {
+		this.shapes.remove(0);
 		GGroup group = new GGroup();
-		for (int i=0;i<this.allShapes.size();i++) {
-			GShape s = allShapes.get(i);
-			if(this.selecter.onShape(s.getCenter())) {
-				s.select(true);
-				this.selected.add(0, i);
+		for (int i=this.shapes.size()-1; i>-1;i--) {
+			GShape shape = shapes.get(i);
+			if(this.selecter.grab(shape.getCenter())) {
+				group.addChild(shape);
+				this.shapes.remove(i);
 			}
 		}
 		this.selecter.reset();
-		return null;
+		return group.finalize(in, line);
 	}
 }

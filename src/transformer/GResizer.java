@@ -5,70 +5,45 @@ import java.awt.Point;
 import java.util.Vector;
 
 import shapes.GShape;
-import valueObject.AnchorInfo;
 
-public class GResizer extends GTransformer {
+public abstract class GResizer extends GTransformer {
 
-	private AnchorInfo anchorInfo;
+	protected Point nextOriginPoint;
+	protected Point anchorPoint;
 	
-	public GResizer(Vector<GShape> drawingShape, Vector<Integer> selected) {
-		super(drawingShape, selected);
+	public GResizer(GShape shape) {
+		super(shape);
 	}
 
-	public void setAnchorPoints(byte anchor) {
-		AnchorInfo anchorInfo = new AnchorInfo();
-		anchorInfo.setAnchorNumber(anchor);
-		byte opposite = anchor;
+	public static GTransformer createGResizser (int anchor, GShape shape) {
+		GResizer resizer;
+		switch(anchor) {
+		case 3:
+		case 7: resizer = new XSideChange(shape); break;
+		case 1:
+		case 5: resizer = new YSideChange(shape); break;
+		default : resizer = new VertexChange(shape); break;
+		}
+		resizer.setAnchor(anchor);
+		return resizer;
+	}
+	
+	public void setAnchor (int anchor) {
+		int opposite = anchor;
 		opposite+=4;
 		if (opposite>7)opposite-=8;
-		for(Integer i : this.selected) {
-			GShape shape = this.allShapes.get(i);
-			Point p1, p2;
-			if(opposite%2 != 0) {
-				p1 = transAnchor(shape, anchor);
-				p2 = transAnchor(shape, opposite);
-			}else {
-				p1 = shape.getAnchor(anchor);
-				p2 = shape.getAnchor(opposite);
-			}
-			anchorInfo.addAnchorPoint(p1);
-			anchorInfo.addOppositePoint(p2);
+		Point p1, p2;
+		if(opposite%2 != 0) {
+			p1 = transAnchor(shape, anchor);
+			p2 = transAnchor(shape, opposite);
+		}else {
+			p1 = shape.getAnchor(anchor);
+			p2 = shape.getAnchor(opposite);
 		}
-		this.anchorInfo = anchorInfo;
+		this.anchorPoint = p1;
+		this.start = p2;
 	}
 
-	@Override
-	public void keep(Point end) {
-		int dx = end.x - start.x;
-		int dy = end.y - start.y;
-		
-		byte anchorNum = anchorInfo.getAnchorNumber();
-		Vector<Point> origin = anchorInfo.getAnchorPoint();
-		Vector<Point> opposite = anchorInfo.getOppositePoint();
-		boolean is37 = false;
-		boolean is15 = false;
-		if(anchorNum==3 || anchorNum==7) {
-			is37 = true;
-		}else if(anchorNum==1 || anchorNum==5) {
-			is15 = true;
-		}
-		for(int i=0;i<selected.size();i++) {
-			GShape shape = this.allShapes.get(selected.get(i));
-			Point p = origin.get(i);
-			p.setLocation(p.x+dx, p.y+dy);
-			Point dummy = this.transAnchor(shape, anchorNum);
-			if(is37) {
-				dummy.setLocation(p.x, dummy.y);
-			}else if(is15) {
-				dummy.setLocation(dummy.x, p.y);
-			}else {
-				dummy = p;
-			}
-			shape.resize(opposite.get(i),dummy);
-			shape.finishResize();
-		}
-		this.start = end;
-	}
 	/**
 	 * Transfer anchorNum that is odd to definite anchor
 	 * @param I 6 - 5 - 4
@@ -76,17 +51,125 @@ public class GResizer extends GTransformer {
 	 * @param I 0 - 1 - 2			L> 3번 1번 = 4, 5번 7번 = 0으로 감.
 	 * @return Point[0] is fixed Point and Point[1] is unfixed Point.
 	 * */
-	private Point transAnchor(GShape shape, byte anchor) {
+	private Point transAnchor(GShape shape, int anchor) {
 		byte transAnchor;
 		if(anchor>4) transAnchor = 4;
 		else transAnchor = 0;
 		return shape.getAnchor(transAnchor);
 	}
 	
-	
-	@Override
-	public GShape finalize(Color in, Color line) {
-		return null;
+	private static class XSideChange extends GResizer{
+		
+		public XSideChange(GShape shape) {
+			super(shape);
+			this.nextOriginPoint = new Point();
+		}
+		
+		@Override
+		public void keepTransform(Point end) {
+			double xRate;
+			int dx = end.x - start.x;
+
+			nextOriginPoint.setLocation(this.anchorPoint.x, 0);
+			xRate = this.validXRate(dx, anchorPoint, end, nextOriginPoint);
+			
+			transform(xRate, 1, shape);
+			
+			anchorPoint = nextOriginPoint;
+			
+			System.out.println(xRate+", "+1);
+		}
 	}
 	
+	private static class YSideChange extends GResizer{
+		
+		public YSideChange(GShape shape) {
+			super(shape);
+			this.nextOriginPoint = new Point();
+		}
+		@Override
+		public void keepTransform(Point end) {
+			double yRate;
+			int dy = end.y - start.y;
+
+			nextOriginPoint.setLocation(0, anchorPoint.y);
+			yRate = this.validYRate(dy, anchorPoint, end, nextOriginPoint);
+			
+			transform(1, yRate, shape);
+			
+			anchorPoint = nextOriginPoint;
+			
+			System.out.println(1+", "+yRate);
+		}
+		
+	}
+	
+	private static class VertexChange extends GResizer{
+		
+		public VertexChange(GShape shape) {
+			super(shape);
+			this.nextOriginPoint = new Point();
+		}
+		
+		@Override
+		public void keepTransform(Point end) {
+			double xRate;
+			double yRate;
+			int dx = end.x - start.x;
+			int dy = end.y - start.y;
+
+			xRate = this.validXRate(dx, anchorPoint, end, nextOriginPoint);
+			yRate = this.validYRate(dy, anchorPoint, end, nextOriginPoint);
+			
+			transform(xRate, yRate, shape);
+			
+			anchorPoint = nextOriginPoint;
+			
+			System.out.println(xRate+", "+yRate);
+		}
+	}
+
+
+	@Override
+	public void initTransform(Point start) {}
+	
+	protected double validXRate(int dx, Point origin, Point end, Point p) {
+		double xRate;
+		int width = origin.x - start.x;
+		if (dx>-1 && dx<1) {
+			xRate = 1;
+			p.setLocation(origin.x, p.y);
+		}else {
+			xRate = (double)dx/width;
+			p.setLocation(end.x, p.y);
+		}
+		return xRate;
+	}
+	protected double validYRate(int dy, Point origin, Point end, Point p) {
+		double yRate;
+		int height = origin.y - start.y;
+		if (dy>-1 && dy<1) {
+			yRate = 1;
+			p.setLocation(p.x, origin.y);
+		}else {
+			yRate = (double)dy/height;
+			p.setLocation(p.x, end.y);
+		}
+		return yRate;
+	}
+	
+	protected void transform(double xRate, double yRate, GShape shape) {
+		this.affineTransfrom.setToScale(xRate, yRate);
+		this.affineTransfrom.translate(-start.x, -start.y);
+		shape.transform(this.affineTransfrom);
+		
+		this.affineTransfrom.setToTranslation(start.x, start.y);
+		shape.transform(this.affineTransfrom);
+	}
+	
+	@Override
+	public GShape finalizeTransform(Color in, Color line) {
+		shape.finalizeTransforming();
+		return null;
+	}
 }

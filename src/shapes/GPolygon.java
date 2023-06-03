@@ -1,110 +1,78 @@
 package shapes;
 
 import java.awt.Color;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
-import java.awt.Polygon;
 import java.awt.Rectangle;
-import java.util.Collection;
-import java.util.Iterator;
+import java.awt.Shape;
+import java.awt.geom.Path2D;
+import java.awt.geom.Point2D;
 
-public class GPolygon extends GFreeLine {
+public class GPolygon extends GShape {
 
+	private boolean complete;
 	private Point animationPoint;
-	private Polygon polygon;
 	
 	public GPolygon() {
 		super();
-		this.shape = new Polygon();
-		this.polygon = (Polygon)this.shape;
+		this.shape = new Path2D.Double();
 	}
-	public GPolygon(Collection<Integer> x, Collection<Integer> y, Rectangle size, Color innerColor, Color lineColor) {
-		this();
-		this.xCoordinate.addAll(x);
-		this.yCoordinate.addAll(y);
-		this.minX=size.x;
-		this.minY=size.y;
-		this.maxX=size.x+size.width;
-		this.maxY=size.y+size.height;
-		this.reset();
+	public GPolygon(Shape shape, Color innerColor, Color lineColor) {
+		super();
+		this.shape = shape;
 		this.complete = true;
-		this.innerColor = innerColor;
+		this.start = new Point();
+		this.center = new Point();
 		this.lineColor = lineColor;
-		this.finishResize();
-	}
-	private void reset() {
-		this.polygon.reset();
-		Iterator<Integer> x = xCoordinate.iterator();
-		Iterator<Integer> y = yCoordinate.iterator();
-		
-		while(x.hasNext()) this.polygon.addPoint(x.next(), y.next());
+		this.innerColor = innerColor;
+		this.finalizeTransforming();
 	}
 	
 	@Override
-	public void initialize(Point start, Point mouse) {
-		animationPoint = mouse;
+	public void initialize(Point start) {
+		this.start = start;
+		Path2D p = (Path2D)this.shape;
+		p.moveTo(start.x, start.y);
+		this.animationPoint = start;
+	}
+	
+	@Override
+	public void keep(Point end) {
+		animationPoint = end;
+	}
+
+	@Override
+	public void addPoint(Point p) {
+		Path2D path = (Path2D)this.shape;
+		path.lineTo(p.getX(), p.getY());
 	}
 
 	@Override
 	public GShape finalize(Color innerColor, Color lineColor) {
-		int last = this.xCoordinate.size()-1;
-		if(last<=0) {
+		Rectangle r = this.shape.getBounds();
+		if(r.width*r.height<=4) {
 			return null;
 		}
-		Point p1 = new Point(this.xCoordinate.get(0),this.yCoordinate.get(0));
-		Point p2 = new Point(this.xCoordinate.get(last),this.yCoordinate.get(last));
-		double distance = p1.distance(p2);
-		if(distance>5) {
-			Rectangle bounds = new Rectangle
-					(this.minX,this.minY,this.maxX-this.minX,this.maxY-this.minY);
-			return new GFreeLine(this.xCoordinate,this.yCoordinate,bounds, innerColor, lineColor);
-		} 
-		this.complete = true;
+		Path2D path = (Path2D)this.shape;
+		Point2D p = path.getCurrentPoint();
+		double distance = this.start.distance(p);
+		if(distance>5) return new GFreeLine(path, innerColor, lineColor);
+		
+		path.lineTo(start.getX(), start.getY());
 		this.innerColor = innerColor;
 		this.lineColor = lineColor;
-		this.reset();
-		finishResize();
+		this.finalizeTransforming();
+		this.complete = true;
 		return this;
 	}
 	
 	@Override
-	public void addPoint(Point p) {
-		int size = this.xCoordinate.size()-1;
-		if(size==-1 || !(p.x==this.xCoordinate.get(size) && p.y==this.yCoordinate.get(size))) {
-			this.setMaxMinCoordinate(p);
-			this.xCoordinate.add(p.x);
-			this.yCoordinate.add(p.y);
+	public void draw(Graphics2D g) {
+		super.draw(g);
+		if(!this.complete) {
+			Path2D path = (Path2D)this.shape;
+			Point2D p = path.getCurrentPoint();
+			g.drawLine((int)p.getX(),(int)p.getY(),animationPoint.x,animationPoint.y);
 		}
 	}
-	@Override
-	public void draw(Graphics g) {
-		Graphics2D g2D = (Graphics2D)g;
-		if(this.complete) {
-			if(this.innerColor!=null) {
-				g2D.setColor(innerColor);
-				g2D.fill(shape);
-			}
-			if(this.lineColor!=null) {
-				g2D.setColor(lineColor);
-				g2D.draw(shape);
-			}
-		}else {
-			super.draw(g2D);
-			int size = this.xCoordinate.size()-1;
-			Point p = new Point(this.xCoordinate.get(size),this.yCoordinate.get(size));
-			g2D.drawLine(p.x,p.y,animationPoint.x,animationPoint.y);
-		}
-		this.drawAnchors(g2D);
-	}
-	@Override
-	public boolean onShape(Point mouse) {
-		return this.polygon.contains(mouse);
-	}
-	@Override
-	public void move(int dx, int dy) {
-		super.move(dx, dy);
-		reset();
-	}
-
 }

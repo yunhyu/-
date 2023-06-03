@@ -13,12 +13,12 @@ import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
+import javax.swing.JColorChooser;
 import javax.swing.JFrame;
 
 import frame.GDrawingPanel;
 import frame.GMenuBar;
 import frame.GToolBar;
-import transformer.GTransformer;
 
 public class GMainFrame extends JFrame {
 
@@ -27,10 +27,9 @@ public class GMainFrame extends JFrame {
 	 */
 	private static final long serialVersionUID = 5629717143701652344L;
 	
-	private GToolBar toolBar;
+	private GToolBar toolbar;
 	private GMenuBar menuBar;
 	private GDrawingPanel canvus;
-//	private ListenerAction action;
 	private BorderLayout layout;
 	
 	public GMainFrame(GraphicsConfiguration gc) {super(gc);}
@@ -47,20 +46,19 @@ public class GMainFrame extends JFrame {
 	    setTitle(GContants.CMainframe.TITLE); // 제목
 		
 		this.menuBar = new GMenuBar();
-		this.toolBar = new GToolBar();
+		this.toolbar = new GToolBar();
 		this.canvus = new GDrawingPanel();
-//		this.action = new ListenerAction();
 		
 		this.layout = new BorderLayout();
 		this.setLayout(layout);
 		this.setJMenuBar(this.menuBar);
-//		this.getContentPane().add(toolBar,BorderLayout.NORTH);
-		this.add(toolBar,BorderLayout.NORTH);
+		
+		this.add(toolbar,BorderLayout.NORTH);
 		this.add(canvus,BorderLayout.CENTER);
 	}
 	public void initialize() {
-		this.toolBar.initialize(new ColorHandler());
-		this.canvus.initialize(this.toolBar);
+		this.toolbar.initialize(new ColorListener(this));
+		this.canvus.initialize(this.toolbar);
 		this.setVisible(true);
 		
 		EKeyHandler keyboard = new EKeyHandler();
@@ -68,16 +66,8 @@ public class GMainFrame extends JFrame {
 		this.requestFocus();
 	}
 	private void reset() {
-		this.toolBar.initialize(new ColorHandler());
-		this.canvus.initialize(this.toolBar);
-	}
-	private void setColor() {
-		Color in = this.toolBar.getInnerColor();
-		Color line = this.toolBar.getLineColor();
-//		if(transformer.getNumOfSelected()==1) {
-			this.canvus.changeColor(in, line);
-//		}
-		this.canvus.drawPaints(this.canvus.getGraphics());
+		this.toolbar.initialize(new ColorListener(this));
+		this.canvus.initialize(this.toolbar);
 	}
 	
 //===============================================================================
@@ -120,16 +110,33 @@ public class GMainFrame extends JFrame {
 
 		@Override
 		public void itemStateChanged(ItemEvent e) {
-			setColor();
+			// TODO Auto-generated method stub
+			
 		}
 		
 	}
-	private class ListenerAction implements ActionListener{
+	private class ColorListener implements ActionListener{
 
+		private GMainFrame parent;
+		
+		public ColorListener(GMainFrame parent) {
+			this.parent = parent;
+		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			if(e.getActionCommand().equals("new")) {
-				reset();
+			Color c = JColorChooser.showDialog(parent, getTitle(), getForeground());
+			switch(e.getActionCommand()) {
+			case "default-in":
+				toolbar.setDefaultInnerColor(c);
+				break;
+			case "default-line":
+				toolbar.setDefaultLineColor(c);
+				break;
+			case "shape-in":
+				break;
+			case "shape-line":
+				break;
+				
 			}
 		}
 	}

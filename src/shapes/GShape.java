@@ -4,67 +4,99 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.Shape;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.util.Vector;
 
+import main.GContants.EAnchors;
 import valueObject.GShapeInfo;
-
+/**
+ * 
+ * */
 public abstract class GShape {
 
-	private int[] anchorX, anchorY;
-	protected int x,y,height,width, angle;
-	protected Point center, axis;
-	protected boolean isSelected;
+	/**
+	 * To make {@code unselectRange} copied {@code shape} should translated to (0, 0)
+	 * and scale down by {@link AffineTransform}. And then, unselecting shape should return to
+	 * correct location. This field determines that. 
+	 * 
+	 * @see AffineTransform 
+	 * */
+	protected double unselectRangeX, unselectRangeY;
+	/**
+	 * Represents whether this shape is selected.
+	 * */
+	protected boolean bSelected;
 	protected boolean isGroupChild = false;
-	protected Shape shape;
-	protected Vector<Ellipse2D> shearAnchor;
+	protected Point start, center;
+	protected Shape shape, unselectRange;
 	protected Color innerColor, lineColor;
+	protected Vector<Ellipse2D> shearAnchor;
+	protected AffineTransform unselectRangeMaker;
+	protected Point2D[] anchorLocation;
+	protected GAnchors gAnchors;
 	
 	public GShape(){
 		this.center = new Point();
-		this.isSelected = false;
+		this.bSelected = false;
+		this.unselectRange = new Rectangle();
+		this.unselectRangeMaker = new AffineTransform();
 		this.lineColor = new Color(30, 30, 30, 100);
 		this.shearAnchor = new Vector<Ellipse2D>();
-		this.anchorX = new int[8];
-		this.anchorY = new int[8];
+		this.gAnchors = new GAnchors();
+		this.unselectRangeX = 2;
+		this.unselectRangeY = 2;
+		this.makeAnchor(8);
 	}
-	
+	protected void makeAnchor(int num) {
+		this.anchorLocation = new Point2D[num];
+	}
 	/**for other shape*/
-	public abstract void initialize(Point start, Point mouse);
+	public void initialize(Point start) {
+		this.start = start;
+	}
+	/**for other shape*/
+	public abstract void keep(Point mouse);
 	/**Only for Polygon.*/
 	public void addPoint(Point p) {};
 	/**
 	 * Finalize shape making. This method must contain finishResize() method.
 	 * */
 	public abstract GShape finalize(Color innerColor, Color lineColor);
-	/**
-	 * initialize + adjust angle
-	 * */
-	public abstract void resize(Point start, Point mouse);
-	/**
-	 * This method finalizes only resizing. finalize() method determines size, color, etc.
-	 * This method supplement setting() method.
-	 * */
-	public abstract void finishResize();
 	/**Draw this shape with given Graphics object.
 	 * @param g Graphics object. Get it from where to draw this shape.*/
-	public void draw(Graphics g) {
-		Graphics2D g2D = (Graphics2D)g;
+	public void draw(Graphics2D g) {
 		if(this.innerColor!=null) {
-			g2D.setColor(innerColor);
-			g2D.fill(shape);
+			g.setColor(innerColor);
+			g.fill(shape);
 		}
 		if(this.lineColor!=null) {
-			g2D.setColor(lineColor);
-			g2D.draw(shape);
+			g.setColor(lineColor);
+			g.draw(shape);
 		}
+//		unselectRangeMaker.setToScale(0.75, 0.75);
+//		unselectRangeMaker.translate(-start.x, -start.y);
+//		Shape s = unselectRangeMaker.createTransformedShape(shape);
+//		double w = (shape.getBounds().getWidth() - s.getBounds().getWidth())/unselectRangeX;
+//		double h = (shape.getBounds().getHeight() - s.getBounds().getHeight())/unselectRangeY;
+//		unselectRangeMaker.setToTranslation(start.getX()+w, start.getY()+h);
+//		s = unselectRangeMaker.createTransformedShape(s);
+		g.setColor(Color.blue);
+		g.draw(this.unselectRange);
 	}
 	/**See whether mouse is on this shape.
 	 * @param mouse Point that want to see if point is on this shape.
 	 * @return Return true if Point is in this shape's range. Else return false.*/
-	public boolean onShape(Point mouse) {
-		return this.shape.contains(mouse);
+	public boolean grab(Point mouse) {
+		if(this.shape.contains(mouse)) {
+//			if(innerColor!=null) return true;
+			return !unselectRange.contains(mouse);
+		}
+		return false;
 	};
 	/**
 	 * This method get starting point and bound of a rectangle from given two Point.  
@@ -91,27 +123,13 @@ public abstract class GShape {
 		}
 		return point;
 	}
-	/**Change this shape's location.
-	 * @param dx = x1 - x2
-	 * @param dy = y1 - y2*/
-	public void move(int dx, int dy) {
-//		System.out.println("move "+dx+", "+dy);
-		this.x+=dx;
-		this.y+=dy;
-		this.center.setLocation(this.center.x+dx, this.center.y+dy);
-		this.setAnchorLocation();
-	}
 	/**Draw resize anchors. Use it inside draw(Graphics g) method.
 	 * @param g Graphics object.*/
 	public void drawAnchors(Graphics g) {
-		if(isSelected) {
-			g.setColor(Color.black);
-			g.drawRect(x, y, width, height);
-			g.setColor(Color.white);
-			for(int i=0;i<8;i++) g.fillRect(this.anchorX[i]-2, this.anchorY[i]-2, 4, 4);
-			g.setColor(Color.black);
-			for(int i=0;i<8;i++) g.drawRect(this.anchorX[i]-2, this.anchorY[i]-2, 4, 4);
-		}
+		g.setColor(Color.black);
+		Rectangle r = this.shape.getBounds();
+		g.drawRect(r.x, r.y, r.width, r.height);
+		this.gAnchors.draw((Graphics2D)g, this.shape.getBounds());
 	}
 	/** 
 	 * This method see the given point is on anchor. If you add 4 from anchorNum, 
@@ -125,24 +143,14 @@ public abstract class GShape {
 	 * Returns byte between -1 and 7. Returns -1 when no anchor is under the Point.
 	 * The number represents an anchor. Follow the text up above.
 	 * */
-	public byte grabResize(Point mouse) {
-		for (byte i=0;i<8;i++) if(isInRectRange(this.anchorX[i]-3,this.anchorY[i]-3,6,6,mouse)) {
-			System.out.println(i);
-			return i;
+	public EAnchors onShape(int x, int y ) {
+		EAnchors anchor = this.gAnchors.onAnchor(x, y);
+		if(anchor == null) {
+			if(shape.contains(x, y))return EAnchors.MM;
+			else return null;
+		}else {
+			return anchor;
 		}
-		return -1;
-	}
-	/**
-	 * See whether a rectangle contains a point.
-	 * @param x Rectangle's x coordinate.
-	 * @param y Rectangle's y coordinate.
-	 * @param width Rectangle's width coordinate.
-	 * @param height Rectangle's height coordinate.
-	 * @param mouse The Point
-	 * @return return true if point is in rectangle. If not, return false.
-	 * */
-	protected boolean isInRectRange(int x, int y, int width, int height, Point mouse) {
-		return x<mouse.x&&x+width>mouse.x&&y<mouse.y&&y+height>mouse.y;
 	}
 	protected void addShear() {
 		
@@ -171,79 +179,64 @@ public abstract class GShape {
 	 * @param I 0 - 1 - 2
 	 * */
 	protected void setAnchorLocation() {
-		this.anchorY[0]=this.y+this.height;
-		this.anchorY[1]=this.y+this.height;
-		this.anchorY[2]=this.y+this.height;
-		this.anchorY[3]=this.center.y;
-		this.anchorY[7]=this.center.y;
-		this.anchorY[6]=this.y;
-		this.anchorY[5]=this.y;
-		this.anchorY[4]=this.y;
-		
-		this.anchorX[0]=this.x;
-		this.anchorX[1]=this.center.x;
-		this.anchorX[2]=this.x+this.width;
-		this.anchorX[3]=this.x;
-		this.anchorX[7]=this.x+this.width;
-		this.anchorX[6]=this.x;
-		this.anchorX[5]=this.center.x;
-		this.anchorX[4]=this.x+this.width;
+		this.gAnchors.setPosition(this.shape);
 	}
 	/**Turn on/off selected mode.
-	 * @param selected true to turn on selected mode. false to turn it off.
+	 * @param bSelected true to turn on selected mode. false to turn it off.
 	 * */
-	public void select(boolean selected) {this.isSelected = selected;}
+	public void setSelected(boolean bSelected) {this.bSelected = bSelected;}
 	
 	public void group(boolean group) {this.isGroupChild = group;}
-	/**
-	 * Set x, y, width, height and center. These are used to set anchor.
-	 * */
-	public void setAnchorBounds(int x, int y, int width, int height) {
-		this.x = x;
-		this.y = y;
-		this.height = height;
-		this.width = width;
-		this.setCenter(x+(width/2), y+(height/2));
-	}
-	public void setCenter(int centerX, int centerY) {this.center.setLocation(centerX, centerY);}
-	public void setInnerColor(Color color) {this.innerColor = color;}
-	public void setLineColor(Color color) {this.lineColor = color;}
-	public void setAxis(int x, int y) {this.axis.setLocation(x, y);}
 	
-	public int getX() {return x;}
-	public int getY() {return y;}
-	public int getHeight() {return height;}
-	public int getWidth() {return width;}
-	public boolean isSelected() {return this.isSelected;}
+	public void setLineColor(Color color) {this.lineColor = color;}
+	public void setInnerColor(Color color) {
+		this.innerColor = color;
+		makeUnselectRange();
+	}
+
+	public boolean isSelected() {return this.bSelected;}
 	public boolean isGrouped() {return this.isGroupChild;}
 	public Point getCenter() {return this.center;}
+	public Point getStart() {return this.start;}
 	public Color getInnerColor() {return this.innerColor;}
 	public Color getLineColor() {return this.lineColor;}
-	/**
-	 * Returns x, y coordinate and size. Width is delta x, and height is delta y. 
-	 * @return int[] bounds = {x, y, width, height}
-	 * */
-	public int[] getAnchorBounds() {
-		int[] dummy = {x,y,width,height};
-		return dummy;
-	}
-	public Point getAxis() {return this.axis;}
+	public Shape getShape() {return this.shape;}
+
 	/**
 	 * @return Returns anchor's coordinate. 
 	 * */
-	public Point getAnchor(byte anchorNum) {
-		return new Point(this.anchorX[anchorNum],this.anchorY[anchorNum]);
+	public Point getAnchor(int anchor) {
+		return this.gAnchors.getAnchor(anchor);
+	}
+	
+	public void transform(AffineTransform affine) {
+		this.shape = affine.createTransformedShape(shape);
+	}
+	/**
+	 * 
+	 * */
+	public void finalizeTransforming() {
+		Rectangle r = this.shape.getBounds();
+		this.start.setLocation(r.x, r.y);
+		this.center.setLocation(r.getCenterX(), r.getCenterY());
+		this.makeUnselectRange();
+		this.setAnchorLocation();
+	}
+	private void makeUnselectRange() {
+		if(this.innerColor == null) {
+			unselectRangeMaker.setToScale(0.75, 0.75);
+			unselectRangeMaker.translate(-start.x, -start.y);
+			unselectRange = unselectRangeMaker.createTransformedShape(shape);
+			double w = (shape.getBounds().getWidth() - unselectRange.getBounds().getWidth())/unselectRangeX;
+			double h = (shape.getBounds().getHeight() - unselectRange.getBounds().getHeight())/unselectRangeY;
+			unselectRangeMaker.setToTranslation(start.getX()+w, start.getY()+h);
+			unselectRange = unselectRangeMaker.createTransformedShape(unselectRange);
+		}
 	}
 	/**
 	 * Make this object to follow GShapeInfo's attribute.
 	 * */
-	public void setAtribute(GShapeInfo info){
-		this.x = info.getX();
-		this.y = info.getY();
-		this.width = info.getWidth();
-		this.height = info.getHeight();
-		this.center = info.getCenter();
-		this.axis = info.getAxis();
+	public void setAtribute(GShapeInfo info) {
 		this.shape = info.getShape();
 		this.innerColor = info.getInnerColor();
 		this.lineColor = info.getLineColor();
@@ -255,8 +248,6 @@ public abstract class GShape {
 	 * */
 	public GShapeInfo getAllAttribute() {
 		GShapeInfo info = new GShapeInfo();
-		info.setBounds(x, y, width, height);
-		info.setAxis(this.axis);
 		info.setInnerColor(innerColor);
 		info.setLineColor(lineColor);
 		info.setShape(shape);

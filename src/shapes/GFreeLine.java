@@ -1,169 +1,71 @@
 package shapes;
 
 import java.awt.Color;
-import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.util.Collection;
+import java.awt.Shape;
+import java.awt.geom.Path2D;
+import java.awt.geom.Point2D;
 import java.util.Vector;
 
-import valueObject.GShapeInfo;
-
 public class GFreeLine extends GShape{
-	
 
-	protected boolean complete;
-	protected int maxX,maxY,minX,minY;
-	protected Vector<Integer> xCoordinate;
-	protected Vector<Integer> yCoordinate;
-	
 	public GFreeLine() {
 		super();
-		this.xCoordinate = new Vector<Integer>();
-		this.yCoordinate = new Vector<Integer>();
-		this.complete = false;
+		this.shape = new Path2D.Double();
 	}
-	public GFreeLine(Collection<Integer> x, Collection<Integer> y, Rectangle size, Color innerColor, Color lineColor) {
-		this();
-		this.xCoordinate.addAll(x);
-		this.yCoordinate.addAll(y);
-		this.minX=size.x;
-		this.minY=size.y;
-		this.maxX=size.x+size.width;
-		this.maxY=size.y+size.height;
-		this.complete = true;
-		this.innerColor = innerColor;
+	public GFreeLine(Shape shape, Color innerColor, Color lineColor) {
+		super();
+		this.shape = shape;
+		this.start = new Point();
+		this.center = new Point();
 		this.lineColor = lineColor;
-		this.finishResize();
+		this.innerColor = innerColor;
+		this.finalizeTransforming();
 	}
 	
 	@Override
-	public void initialize(Point start, Point end) {
-		this.setMaxMinCoordinate(end);
-		this.xCoordinate.add(end.x);
-		this.yCoordinate.add(end.y);
+	public void initialize(Point start) {
+		Path2D p = (Path2D)shape;
+		p.moveTo(start.x, start.y);
+		this.start = start;
 	}
-	protected void setMaxMinCoordinate(Point p) {
-		if (this.xCoordinate.size()==0) {
-			this.maxX = p.x;
-			this.minX = p.x;
-			this.maxY = p.y;
-			this.minY = p.y;
-		}else {
-			if(p.x>this.maxX)		this.maxX = p.x;
-			else if(p.x<this.minX)	this.minX = p.x;
-			if(p.y>this.maxY)		this.maxY = p.y;
-			else if(p.y<this.minY)	this.minY = p.y;
-		}
+	@Override
+	public void keep(Point end) {
+		Path2D.Double p = (Path2D.Double)this.shape;
+		p.lineTo(end.x, end.y);
 	}
 	@Override
 	public GShape finalize(Color innerColor, Color lineColor) {
-		int last = this.xCoordinate.size()-1;
-		if(last<=0) {
+		Rectangle r = this.shape.getBounds();
+		if(r.width*r.height<=4) {
 			return null;
 		}
-		Point p1 = new Point(this.xCoordinate.get(0),this.yCoordinate.get(0));
-		Point p2 = new Point(this.xCoordinate.get(last),this.yCoordinate.get(last));
-		double distance = p1.distance(p2);
+		Path2D path = (Path2D)this.shape;
+		Point2D p = path.getCurrentPoint();
+		double distance = this.start.distance(p);
 		if(distance<5) {
-			this.xCoordinate.set(last, this.xCoordinate.get(0));
-			this.yCoordinate.set(last, this.yCoordinate.get(0));
-			Rectangle bounds = new Rectangle
-					(this.minX,this.minY,this.maxX-this.minX,this.maxY-this.minY);
-			return new GPolygon(xCoordinate,yCoordinate,bounds, innerColor, lineColor);
+			path.lineTo(start.getX(), start.getY());
+			return new GPolygon(path, innerColor, lineColor);
 		}else {
-			finishResize();
-			this.complete = true;
 			this.innerColor = innerColor;
 			this.lineColor = lineColor;
+			this.finalizeTransforming();
 			return this;
 		}
 	}
-	@Override
-	public void resize(Point start, Point end) {
-		/* 6-4 - 앵커 위치
-		 * 0-2
-		 * 앵커는 움직이는 게 end, 고정점이 start임. 0 - 4 움직임에서 0이 4쪽으로 갈때는 rate가 줄어들지만, x좌표는 오히려
-		 * 늘어남. 이걸 캐치해야함. => minX만큼 빼고 rate를 곱한 후 다시 minX를 더하는 방식으로?
-		 * 0 - 4움직임에선 maxX가 움직이면 안됨. 
-		 * 
-		 * transPoint로 움직임을 고정해야하나? => 그럼 편할려나?
-		 * => min이랑 max를 고정할 수 있네.
-		 * */
-//		double widthRate = Math.abs(start.getX()-end.getX())/this.width;
-//		double heightRate = Math.abs(start.getY()-end.getY())/this.height;
-////		System.out.println(start.x+", "+end.x+", "+(start.x-end.x)+", "+this.width);
-////		System.out.println(start.y+", "+end.y+", "+(start.y-end.y)+", "+this.height);
-//		System.out.println(widthRate+",  "+heightRate);
-//		for (int i=0;i<this.xCoordinate.size();i++) {
-//			if(widthRate!=0) {
-//				int x = (int) (this.xCoordinate.get(i)*widthRate);
-//				this.xCoordinate.setElementAt(x, i);
-//			}
-//			if(heightRate!=0) {
-//				int y = (int) (this.yCoordinate.get(i)*heightRate);
-//				this.yCoordinate.setElementAt(y, i);
-//			}
-//		}
-//		this.maxX = (int) (this.maxX*widthRate);
-//		this.maxY = (int) (this.maxY*heightRate);
-//		this.minX = (int) (this.minX*widthRate);
-//		this.minY = (int) (this.minY*heightRate);
-	}
-	@Override
-	public void finishResize() {
-		this.setAnchorBounds(minX, minY, this.maxX - this.minX, this.maxY - this.minY);
-		this.setAnchorLocation();
-	}
 
 	@Override
-	public void draw(Graphics g) { 
+	public void draw(Graphics2D g) { 
 		if(this.lineColor!=null) {
 			g.setColor(lineColor);
-			for (int i=0;i<this.xCoordinate.size()-1;i++) {
-				int x1 = this.xCoordinate.get(i);
-				int x2 = this.xCoordinate.get(i+1);
-				int y1 = this.yCoordinate.get(i);
-				int y2 = this.yCoordinate.get(i+1);
-				g.drawLine(x1,y1,x2,y2);
-			}
+			g.draw(shape);
 		}
 	}
 	@Override
-	public boolean onShape(Point mouse) {
-		if(this.xCoordinate.size()<=2 || !this.isInRectRange(x, y, width, height, mouse)) {
-			return false;	
-		}
-		return true;
-	}
-	@Override
-	public void move(int dx, int dy) {
-		super.move(dx, dy);
-		for (int i=0;i<this.xCoordinate.size();i++) {
-			int a = this.xCoordinate.get(i);
-			this.xCoordinate.setElementAt(a+dx,i);
-		}
-		for (int i=0;i<this.yCoordinate.size();i++) {
-			int a = this.yCoordinate.get(i);
-			this.yCoordinate.setElementAt(a+dy,i);
-		}
-		this.maxX+=dx;
-		this.minX+=dx;
-		this.maxY+=dy;
-		this.minY+=dy;
-	}
-
-	@Override
-	public void setAtribute(GShapeInfo info){
-		super.setAtribute(info);
-		this.xCoordinate = info.getXCoordinate();
-		this.yCoordinate = info.getYCoordinate();
-	}
-	
-	@Override
-	public GShapeInfo getAllAttribute() {
-		GShapeInfo info = super.getAllAttribute();
-		info.setXYCoordinate(xCoordinate, yCoordinate);
-		return info;
+	public boolean grab(Point mouse) {
+//		return this.shape.contains(mouse);
+		return this.shape.getBounds().contains(mouse);
 	}
 }

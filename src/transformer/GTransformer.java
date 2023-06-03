@@ -2,6 +2,7 @@ package transformer;
 
 import java.awt.Color;
 import java.awt.Point;
+import java.awt.geom.AffineTransform;
 import java.util.Vector;
 
 import shapes.GShape;
@@ -9,25 +10,21 @@ import shapes.GShape;
 public abstract class GTransformer {
 
 	protected Point start, end;
+	protected AffineTransform affineTransfrom;
 	protected GShape shape;
-	protected Vector<GShape> allShapes;
-	protected Vector<Integer> selected;
 	
-	public GTransformer(Vector<GShape> drawingShape, Vector<Integer> selected) {
-		this.allShapes = drawingShape;
-		this.selected = selected;
-	}
-	
-	public void setShape(GShape shape) {
+	public GTransformer() {}
+	public GTransformer(GShape shape) {
 		this.shape = shape;
+		this.affineTransfrom = new AffineTransform();
 	}
 	
-	public void prepare(Point start) {
+	public void initTransform(Point start) {
 		this.start = start;
 	}
-	public abstract void keep(Point end);
-	public abstract GShape finalize(Color in, Color line);
+	public abstract void keepTransform(Point end);
+	public abstract GShape finalizeTransform(Color in, Color line);
 	
-	public void addPoint(Point p) {}
+	public void continueTransform(Point p) {}
 	
 }

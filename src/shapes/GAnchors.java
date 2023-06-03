@@ -7,59 +7,58 @@ import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.geom.Ellipse2D;
 
-public class GAnchors {
-	/**
-	 * Anchor order
-	 * <p>
-	 * 6 - 5 - 4
-	 * <p>
-	 * 3 - - - 7
-	 * <p>
-	 * 0 - 1 - 2
-	 * */
-	public enum EAnchors{
-		SW,
-		SS,
-		SE,
-		WW,
-		NE,
-		NN, 
-		NW,
-		EE,
-		
-		RR,
-		MM;
-	}
+import main.GContants.CAnchors;
+import main.GContants.EAnchors;
+import main.GContants.EDrawableAnchors;
 
-	private Ellipse2D[] anchors;
-	private Shape shape;
+public class GAnchors {
 	
-	public GAnchors(Shape shape) {
-		this.shape = shape;
-		this.anchors = new Ellipse2D[EAnchors.values().length-1];
-		for(int i=0; i<this.anchors.length;i++) {
+	private Shape shape;
+	private Ellipse2D[] anchors;
+	private EAnchors[] eAnchors;
+	
+	public GAnchors() {
+		int numOfDrawableAnchor = EDrawableAnchors.DRAWABLE_ANCHORS.getDrawableAnchor();
+		this.eAnchors = new EAnchors[numOfDrawableAnchor];
+		for(EAnchors anchor : EAnchors.values()) {
+			if(anchor.isDrawable())this.eAnchors[anchor.getAnchorNum()] = anchor;
+		}
+		
+		this.anchors = new Ellipse2D[numOfDrawableAnchor];
+		for(int i=0; i<anchors.length;i++) {
 			this.anchors[i] = new Ellipse2D.Double(0,0,10,10);
 		}
 	}
-	public void setPosition(Rectangle rectangle) {
-		int x = rectangle.x;
-		int y = rectangle.y;
+	//
+	public void setPosition(Shape shape) {
+		this.shape = shape;
+		
+		Rectangle rectangle = this.shape.getBounds();
+		int d1 = CAnchors.RESIZE_ANCHOR_RADIUS*2;
+		int x = rectangle.x - CAnchors.RESIZE_ANCHOR_RADIUS;
+		int y = rectangle.y - CAnchors.RESIZE_ANCHOR_RADIUS;
 		int w = rectangle.width;
 		int h = rectangle.height;
-		this.anchors[0].setFrame(x-2, y+h-2, 4, 4);
-		this.anchors[1].setFrame(x+w/2 -2, y+h-2, 4, 4);
-		this.anchors[2].setFrame(x+w-2, y+h-2, 4, 4);
-		this.anchors[3].setFrame(x-2, y+h/2 -2, 4, 4);
-		this.anchors[4].setFrame(x+w-2, y-2, 4, 4);
-		this.anchors[5].setFrame(x+w/2 -2, y-2, 4, 4);
-		this.anchors[6].setFrame(x-2, y-2, 4, 4);
-		this.anchors[7].setFrame(x+w-2, y+h/2 -2, 4, 4);
+		this.anchors[EAnchors.SW.getAnchorNum()].setFrame(x,	 y+h, 	d1, d1);
+		this.anchors[EAnchors.SS.getAnchorNum()].setFrame(x+w/2, y+h, 	d1, d1);
+		this.anchors[EAnchors.SE.getAnchorNum()].setFrame(x+w,	 y+h, 	d1, d1);
+		this.anchors[EAnchors.WW.getAnchorNum()].setFrame(x,	 y+h/2,	d1, d1);
+		this.anchors[EAnchors.NE.getAnchorNum()].setFrame(x+w,	 y,		d1, d1);
+		this.anchors[EAnchors.NN.getAnchorNum()].setFrame(x+w/2, y, 	d1, d1);
+		this.anchors[EAnchors.NW.getAnchorNum()].setFrame(x,	 y, 	d1, d1);
+		this.anchors[EAnchors.EE.getAnchorNum()].setFrame(x+w,	 y+h/2,	d1, d1);
 		
-		this.anchors[8].setFrame(x+w/2-3, y-10, 6, 6);
+		int d2 = CAnchors.ROTATE_ANCHOR_RADIUS*2;
+		x += CAnchors.RESIZE_ANCHOR_RADIUS;
+		this.anchors[EAnchors.RR.getAnchorNum()].setFrame
+		(x+w/2-CAnchors.ROTATE_ANCHOR_RADIUS, y-d2*2, d2, d2);
 	}
 	public void draw(Graphics2D g, Rectangle rect) {
 		//setPosition
-		this.setPosition(rect);
+//		this.setPosition(rect);
+		int x = rect.x+rect.width/2;
+		g.setColor(Color.black);
+		g.drawLine(x, rect.y, x, rect.y-CAnchors.ROTATE_ANCHOR_RADIUS*4);
 		for(Ellipse2D anchor : this.anchors) {
 			g.setColor(Color.white);
 			g.fill(anchor);
@@ -67,12 +66,17 @@ public class GAnchors {
 			g.draw(anchor);
 		}
 	}
-	public EAnchors onAnchor(Point p) {
+	public EAnchors onAnchor(int x, int y) {
 		for(int i=0; i<this.anchors.length;i++) {
 			Ellipse2D anchor = this.anchors[i];
-			if(anchor.contains(p))return EAnchors.values()[i];
+			if(anchor.contains(x, y)) return this.eAnchors[i];
 		}
-		if(this.shape.contains(p))return EAnchors.MM;
 		return null;
+	}
+	
+	public Point getAnchor(int num) {
+		int r = CAnchors.RESIZE_ANCHOR_RADIUS;
+		Ellipse2D anchor = this.anchors[num];
+		return new Point((int)anchor.getX() + r,(int)anchor.getY() + r);
 	}
 }

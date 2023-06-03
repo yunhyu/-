@@ -6,22 +6,21 @@ import java.util.Vector;
 
 import shapes.GShape;
 
-public class GShearer extends GTransformer {
+public class GRotator extends GTransformer{
 
-	public GShearer(GShape shape) {
+	public GRotator(GShape shape) {
 		super(shape);
 	}
 
 	@Override
-	public void initTransform(Point start) {}
-
-	@Override
 	public void keepTransform(Point end) {
+		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
 	public GShape finalizeTransform(Color in, Color line) {
+		// TODO Auto-generated method stub
 		return null;
 	}
 

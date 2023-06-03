@@ -3,78 +3,57 @@ package shapes;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 
+import main.GContants.EAnchors;
+
 public class GLine extends GShape{
 
-	private Line2D line;
-	
 	public GLine() {
 		super();
-		this.isSelected = false;
 		this.shape = new Line2D.Double();
-		this.line = (Line2D)this.shape;
+		this.makeAnchor(2);
 	}
 	
 	@Override
-	public void initialize(Point start, Point end) {
+	public void initialize(Point start) {
+		this.start = start;
+	}
+	
+	@Override
+	public void keep(Point end) {
+		Line2D line = (Line2D)shape;
 		line.setLine(start, end);
 	}
 
 	@Override
 	public GShape finalize(Color innerColor, Color lineColor) {
-		if(this.line.getP1().distance(this.line.getP2())<=0.3) return null;
+		Line2D line = (Line2D)shape;
+		if(line.getP1().distance(line.getP2())<=0.3) return null;
 		this.lineColor = lineColor;
-		finishResize();
+
+		this.finalizeTransforming();
 		return this;
 	}
+	
 	@Override
-	public void resize(Point start, Point end) {
-//		int dx = end.x - start.x;
-//		int dy = end.y - start.y;
-//		Point p1, p2;
-//		if(this.quadrant%2==0) {
-//			this.initialize(start, end);
-//			if(dx<0) {
-//				
-//			}
-//		}else {
-//			p1 = new Point(start.x, end.y);
-//			p2 = new Point(end.x, start.y);
-//			this.initialize(p1, p2);
-//		}
-		
-		this.initialize(start, end);
-	}
+	public boolean grab(Point mouse) {
+		Point2D p1 = this.getAnchor(6);
+		Point2D p2 = this.getAnchor(2);
+		return Line2D.ptSegDist(p1.getX(), p1.getY(), p2.getX(), p2.getY(), mouse.getX(), mouse.getY())<10;	
+	}//반대쪽 선도 되는 거 만들고 점수달라하기
+	
 	@Override
-	public void finishResize() {
-		Point p1 = new Point();
-		Point p2 = new Point();
-		p1.setLocation(line.getP1());
-		p2.setLocation(line.getP2());
-		int[] dummy = this.transPoint(p1, p2);
-		this.setAnchorBounds(dummy[0],dummy[1],dummy[2],dummy[3]);
-		this.setAnchorLocation();
-	}
-	@Override
-	public boolean onShape(Point mouse) {
-		return this.line.ptLineDist(mouse)<3;
-	}
-	@Override
-	public void move(int dx, int dy) {
-		super.move(dx, dy);
-		Point2D p1 = this.line.getP1();
-		Point2D p2 = this.line.getP2();
-		p1.setLocation(p1.getX()+dx, p1.getY()+dy);
-		p2.setLocation(p2.getX()+dx, p2.getY()+dy);
-		this.line.setLine(p1, p2);
-		this.setAnchorLocation();
-	}
-	private boolean angle(Point start, Point end) {
-		int dx = end.x - start.x;
-		int dy = end.y - start.y;
-		return dx*dy>0;
+	public EAnchors onShape(int x, int y ) {
+		EAnchors anchor = this.gAnchors.onAnchor(x, y);
+		if(anchor == null) {
+			if(grab(new Point(x, y)))return EAnchors.MM;
+			else return null;
+		}else {
+			return anchor;
+		}
 	}
 	/**
 	 * Returns byte between -1 and 7. Returns -1 when no anchor is under the Point. 
@@ -91,17 +70,17 @@ public class GLine extends GShape{
 //		else if(super.isInRectRange(x+width-2, y+height-2, 4, 4, mouse))return 2;
 //		return -1;
 //	}
-	@Override
-	public void drawAnchors(Graphics g) {
-		if(isSelected) {
-			g.setColor(Color.white);
-			g.fillRect((int)(line.getX1()-2), (int)(line.getY1()-2), 4, 4);
-			g.fillRect((int)(line.getX2()-2), (int)(line.getY2()-2), 4, 4);
-			g.setColor(Color.black);
-			g.drawRect((int)(line.getX1()-2), (int)(line.getY1()-2), 4, 4);
-			g.drawRect((int)(line.getX2()-2), (int)(line.getY2()-2), 4, 4);
-		}
-	}
+	
+//	@Override
+//	public void drawAnchors(Graphics g) {
+//		g.setColor(Color.white);
+//		g.fillRect((int)(line.getX1()-2), (int)(line.getY1()-2), 4, 4);
+//		g.fillRect((int)(line.getX2()-2), (int)(line.getY2()-2), 4, 4);
+//		g.setColor(Color.black);
+//		g.drawRect((int)(line.getX1()-2), (int)(line.getY1()-2), 4, 4);
+//		g.drawRect((int)(line.getX2()-2), (int)(line.getY2()-2), 4, 4);
+//	}
+	
 //	@Override
 //	public Point getAnchor(byte anchorNum) {
 //		Point dummy = new Point();
