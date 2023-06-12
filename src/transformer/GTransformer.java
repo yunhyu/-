@@ -1,9 +1,7 @@
 package transformer;
 
-import java.awt.Color;
 import java.awt.Point;
 import java.awt.geom.AffineTransform;
-import java.util.Vector;
 
 import shapes.GShape;
 
@@ -22,9 +20,9 @@ public abstract class GTransformer {
 	public void initTransform(Point start) {
 		this.start = start;
 	}
-	public abstract void keepTransform(Point end);
-	public abstract GShape finalizeTransform(Color in, Color line);
-	
+	public abstract void keepTransform(Point end, boolean shiftDown);
+	public abstract GShape finalizeTransform(Point end);
 	public void continueTransform(Point p) {}
+	public void addText(String str) {}
 	
 }

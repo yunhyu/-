@@ -1,10 +1,17 @@
 package main;
 
+import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Image;
+import java.awt.Point;
+import java.awt.Toolkit;
 import java.io.File;
 
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JPanel;
 
 public class GContants {
 	public static class CMainframe{
@@ -21,12 +28,77 @@ public class GContants {
 		public static final int RESIZE_ANCHOR_RADIUS = 3;
 		public static final int ROTATE_ANCHOR_RADIUS = 5;
 	}
+	
+	public static class CShapes{
+		public static final Color DRAWING_COLOR = new Color(30, 30, 30, 100);
+		public static final int UNSELECT_X = 2;
+		public static final int UNSELECT_Y = 2;
+		public static final double UNSELECT_DEFAULT = 0.75;
+	}
 
+	public enum EActionCommands {
+		DEFAULT_IN,
+		DEFAULT_LINE,
+		SHAPE_IN,
+		SHAPE_LINE,
+		STRING_COLOR,
+		GROUP,
+		UNGROUP,
+		TOP,
+		UP,
+		DOWN,
+		BOTTOM;
+	}
+
+	public enum EToolPanel{
+		EDRAWINGTOOL(new JPanel()),
+		ESELECTINGTOOL(new JPanel());
+		
+		private JPanel panel;
+		
+		private EToolPanel(JPanel panel) {
+			this.panel = panel;
+			panel.setLayout(new FlowLayout());
+		}
+		public JPanel getTools() {
+			return this.panel;
+		}
+	}
+	public enum EButtons{
+		DEFAULT_IN(new JButton(), "in", EActionCommands.DEFAULT_IN, new Dimension(10,10)),
+		DEFAULT_LINE(new JButton(), "line", EActionCommands.DEFAULT_LINE, new Dimension(10,10)),
+		SHAPE_IN(new JButton(), "in", EActionCommands.SHAPE_IN, new Dimension(10,10)),
+		SHAPE_LINE(new JButton(), "line", EActionCommands.SHAPE_LINE, new Dimension(10,10)),
+		STRING_COLOR(new JButton(), "text", EActionCommands.STRING_COLOR, new Dimension(10,10)),
+		GROUP(new JButton(new ImageIcon("resource/icons/grouping.png")), EActionCommands.GROUP, new Dimension(20,20)),
+		UNGROUP(new JButton(new ImageIcon("resource/icons/ungrouping.png")), EActionCommands.UNGROUP, new Dimension(20,20)),
+		GOTOP(new JButton(new ImageIcon("resource/icons/z_top.png")), EActionCommands.TOP, new Dimension(20,20)),
+		GOUP(new JButton(new ImageIcon("resource/icons/z_up.png")), EActionCommands.UP, new Dimension(20,20)),
+		GODOWN(new JButton(new ImageIcon("resource/icons/z_down.png")), EActionCommands.DOWN, new Dimension(20,20)),
+		GOBOTTOM(new JButton(new ImageIcon("resource/icons/z_bottom.png")), EActionCommands.BOTTOM, new Dimension(20,20));
+		
+		private JButton button;
+		private String name; 
+		private EButtons(JButton button, EActionCommands actionCommand, Dimension size) {
+			this.button = button;
+			this.button.setActionCommand(actionCommand.toString());
+			this.button.setPreferredSize(size);
+			this.button.setFocusable(false);
+		}
+		private EButtons(JButton button, String name, EActionCommands actionCommand, Dimension size) {
+			this(button, actionCommand, size);
+			this.name = name;
+		}
+		
+		public JButton getButton() {return this.button;}
+		public String getName() {return this.name;}
+	}
+	
 	public enum EUserAction {
 		e2Point,
 		eNPoint
 	}
-	
+
 	public enum EShape{
 		ERECTANGLE(new ImageIcon("resource/icons/square.png"), "shapes.GRectangle", EUserAction.e2Point),
 		EROUNDRECT(new ImageIcon("resource/icons/roundrect.png"), "shapes.GRoundRect", EUserAction.e2Point),
@@ -69,12 +141,19 @@ public class GContants {
 		WAIT (new Cursor(Cursor.WAIT_CURSOR)),
 		MOVE (new Cursor(Cursor.MOVE_CURSOR)),
 		HAND (new Cursor(Cursor.HAND_CURSOR)),
+		TEXT (new Cursor(Cursor.TEXT_CURSOR)),
 		CROSS (new Cursor(Cursor.CROSSHAIR_CURSOR)),
+		ROTATE ("rotate"),
 		DEFAULT (new Cursor(Cursor.DEFAULT_CURSOR));
 		
 		private Cursor cursor;
 		private ECursor(Cursor cursor) {
 			this.cursor = cursor;
+		}
+		private ECursor(String filename) {
+			Toolkit t = Toolkit.getDefaultToolkit();
+			Image c = t.getImage("resource/icons/"+filename+".png");
+			this.cursor = t.createCustomCursor(c, new Point(25,25), filename);
 		}
 		public Cursor getCursor() {return this.cursor;}
 	}
@@ -96,10 +175,12 @@ public class GContants {
 		NN (ECursor.NN, 5, true),
 		NW (ECursor.NW, 6, true),
 		EE (ECursor.EE, 7, true),
-		RR (ECursor.DEFAULT, 8, true),
-		
+		RR (ECursor.ROTATE, 8, true),
+
+		MM (ECursor.MOVE, 9, false),
 		SH (ECursor.DEFAULT, 10, false),
-		MM (ECursor.MOVE, 9, false);
+		TT (ECursor.TEXT, 11, false)
+		;
 		
 		private int anchorNum;
 		private boolean drawable;
@@ -127,7 +208,7 @@ public class GContants {
 		}
 		public int getDrawableAnchor() {return this.numOfDrawableAnchor;}
 	}
-	
+
 	public static class EFonts{
 		
 		public EFonts(){

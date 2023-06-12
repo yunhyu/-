@@ -1,15 +1,18 @@
 package shapes;
 
-import java.awt.Color;
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.awt.geom.Rectangle2D;
 
 public class GRectangle extends GShape{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -4832577751924617738L;
 	public GRectangle(){
 		super();
-		this.shape = new Rectangle();
+		this.origin = new Rectangle();
+		this.drawing = origin;
 	}
 	@Override
 	public void initialize(Point start) {
@@ -18,23 +21,16 @@ public class GRectangle extends GShape{
 	@Override
 	public void keep(Point end) {
 		int[] dummy = super.transPoint(start, end);
-		Rectangle rect = (Rectangle)this.shape;
+		Rectangle rect = (Rectangle)this.origin;
 		rect.setRect(dummy[0],dummy[1],dummy[2],dummy[3]);
 	}
 	@Override
-	public GShape finalize(Color innerColor, Color lineColor) {
-		Rectangle r = this.shape.getBounds();
+	public GShape finish() {
+		Rectangle r = this.origin.getBounds();
 		if(r.width<3&&r.height<3) {
 			return null;
 		}
-		this.innerColor = innerColor;
-		this.lineColor = lineColor;
 		this.finalizeTransforming();
 		return this;
-	}
-	
-	public void reset() {
-		Rectangle r = (Rectangle)this.shape;
-		r.setSize(0, 0);
 	}
 }

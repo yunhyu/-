@@ -1,8 +1,6 @@
 package transformer;
 
-import java.awt.Color;
 import java.awt.Point;
-import java.util.Vector;
 
 import shapes.GShape;
 
@@ -16,13 +14,12 @@ public class GShearer extends GTransformer {
 	public void initTransform(Point start) {}
 
 	@Override
-	public void keepTransform(Point end) {
+	public void keepTransform(Point end, boolean shiftDown) {
 		
 	}
 
 	@Override
-	public GShape finalizeTransform(Color in, Color line) {
+	public GShape finalizeTransform(Point end) {
 		return null;
 	}
-
 }

@@ -1,8 +1,6 @@
 package transformer;
 
-import java.awt.Color;
 import java.awt.Point;
-import java.util.Vector;
 
 import shapes.GShape;
 
@@ -17,7 +15,7 @@ public class GDrawer extends GTransformer {
 		shape.initialize(start);
 	}
 	@Override
-	public void keepTransform(Point end) {
+	public void keepTransform(Point end, boolean shiftDown) {
 		shape.keep(end);
 	}
 	@Override
@@ -26,8 +24,7 @@ public class GDrawer extends GTransformer {
 	}
 
 	@Override
-	public GShape finalizeTransform(Color in, Color line) {
-		return shape.finalize(in, line);
+	public GShape finalizeTransform(Point end) {
+		return shape.finish();
 	}
-
 }

@@ -1,22 +1,23 @@
 package shapes;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.Rectangle;
-import java.awt.Shape;
-import java.awt.geom.AffineTransform;
 
 public class GTriangle extends GShape {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3675762278428893612L;
 	private double shearRate; 
 	private Polygon polygon;
 	
 	public GTriangle() {
 		super();
 		this.polygon = new Polygon();
-		this.shape = this.polygon;
+		this.origin = this.polygon;
+		this.drawing = polygon;
 		this.shearRate = 0.5;
 		this.unselectRangeY = 1.4;
 	}
@@ -28,13 +29,12 @@ public class GTriangle extends GShape {
 	}
 
 	@Override
-	public GShape finalize(Color innerColor, Color lineColor) {
-		Rectangle r = this.shape.getBounds();
+	public GShape finish() {
+		this.origin = this.polygon;
+		Rectangle r = this.origin.getBounds();
 		if(r.width<12&&r.height<12) {
 			return null;
 		}
-		this.innerColor = innerColor;
-		this.lineColor = lineColor;
 		this.finalizeTransforming();
 		return this;
 	}

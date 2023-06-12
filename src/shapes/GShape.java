@@ -8,17 +8,22 @@ import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
-import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.io.Serializable;
 import java.util.Vector;
 
+import main.GContants.CShapes;
 import main.GContants.EAnchors;
 import valueObject.GShapeInfo;
 /**
  * 
  * */
-public abstract class GShape {
+public abstract class GShape implements Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 237512273580602235L;
 	/**
 	 * To make {@code unselectRange} copied {@code shape} should translated to (0, 0)
 	 * and scale down by {@link AffineTransform}. And then, unselecting shape should return to
@@ -27,33 +32,36 @@ public abstract class GShape {
 	 * @see AffineTransform 
 	 * */
 	protected double unselectRangeX, unselectRangeY;
+	
+	protected double theta = 0;
+	protected double groupTheta = 0;
 	/**
 	 * Represents whether this shape is selected.
 	 * */
 	protected boolean bSelected;
 	protected boolean isGroupChild = false;
-	protected Point start, center;
-	protected Shape shape, unselectRange;
-	protected Color innerColor, lineColor;
+	protected StringBuffer text;
+	protected Point start, center, axis;
+	protected Shape origin, drawing, unselectRange;
+	protected Color innerColor, lineColor, strColor;
 	protected Vector<Ellipse2D> shearAnchor;
-	protected AffineTransform unselectRangeMaker;
-	protected Point2D[] anchorLocation;
+	protected AffineTransform unselectRangeMaker, affine;
 	protected GAnchors gAnchors;
 	
 	public GShape(){
+		this.text = new StringBuffer();
 		this.center = new Point();
+		this.axis = center;
 		this.bSelected = false;
 		this.unselectRange = new Rectangle();
 		this.unselectRangeMaker = new AffineTransform();
-		this.lineColor = new Color(30, 30, 30, 100);
+		this.affine = new AffineTransform();
+		this.lineColor = CShapes.DRAWING_COLOR;
 		this.shearAnchor = new Vector<Ellipse2D>();
 		this.gAnchors = new GAnchors();
-		this.unselectRangeX = 2;
-		this.unselectRangeY = 2;
-		this.makeAnchor(8);
-	}
-	protected void makeAnchor(int num) {
-		this.anchorLocation = new Point2D[num];
+		this.unselectRangeX = CShapes.UNSELECT_X;
+		this.unselectRangeY = CShapes.UNSELECT_Y;
+		this.strColor = Color.black;
 	}
 	/**for other shape*/
 	public void initialize(Point start) {
@@ -65,35 +73,34 @@ public abstract class GShape {
 	public void addPoint(Point p) {};
 	/**
 	 * Finalize shape making. This method must contain finishResize() method.
+	 * @return if made shape is not valid, returns null.
 	 * */
-	public abstract GShape finalize(Color innerColor, Color lineColor);
+	public abstract GShape finish();
+	public GShape group(){return this;}
+	public GShape ungroup(){return this;}
+	public void delete() {}
 	/**Draw this shape with given Graphics object.
 	 * @param g Graphics object. Get it from where to draw this shape.*/
 	public void draw(Graphics2D g) {
 		if(this.innerColor!=null) {
 			g.setColor(innerColor);
-			g.fill(shape);
+			g.fill(drawing);
 		}
 		if(this.lineColor!=null) {
 			g.setColor(lineColor);
-			g.draw(shape);
+			g.draw(drawing);
 		}
-//		unselectRangeMaker.setToScale(0.75, 0.75);
-//		unselectRangeMaker.translate(-start.x, -start.y);
-//		Shape s = unselectRangeMaker.createTransformedShape(shape);
-//		double w = (shape.getBounds().getWidth() - s.getBounds().getWidth())/unselectRangeX;
-//		double h = (shape.getBounds().getHeight() - s.getBounds().getHeight())/unselectRangeY;
-//		unselectRangeMaker.setToTranslation(start.getX()+w, start.getY()+h);
-//		s = unselectRangeMaker.createTransformedShape(s);
-		g.setColor(Color.blue);
-		g.draw(this.unselectRange);
+		g.setColor(this.strColor);
+		Rectangle2D r2 = g.getFont().getStringBounds(text.toString(), g.getFontRenderContext());
+		g.drawString(text.toString(), 
+		(int)(center.x - r2.getWidth()/2), (int)(center.y - r2.getHeight()/2));
 	}
 	/**See whether mouse is on this shape.
 	 * @param mouse Point that want to see if point is on this shape.
 	 * @return Return true if Point is in this shape's range. Else return false.*/
 	public boolean grab(Point mouse) {
-		if(this.shape.contains(mouse)) {
-//			if(innerColor!=null) return true;
+		if(this.drawing.contains(mouse)) {
+			if(innerColor!=null) return true;
 			return !unselectRange.contains(mouse);
 		}
 		return false;
@@ -126,19 +133,20 @@ public abstract class GShape {
 	/**Draw resize anchors. Use it inside draw(Graphics g) method.
 	 * @param g Graphics object.*/
 	public void drawAnchors(Graphics g) {
-		g.setColor(Color.black);
-		Rectangle r = this.shape.getBounds();
-		g.drawRect(r.x, r.y, r.width, r.height);
-		this.gAnchors.draw((Graphics2D)g, this.shape.getBounds());
+		this.gAnchors.draw((Graphics2D)g);
 	}
 	/** 
 	 * This method see the given point is on anchor. If you add 4 from anchorNum, 
 	 * you can get anchorNum of opposite side. If added anchorNum is over 7, than subtract 8
 	 * from it.
-	 * @param I Anchor number are ordered like this :
-	 * @param I 6 - 5 - 4
-	 * @param I 3 - - - 7
-	 * @param I 0 - 1 - 2
+	 * <pre> 
+	 * Anchor number are ordered like this :
+	 * [ 6 - 5 - 4 ]
+	 * [ 3 - - - 7 ]
+	 * [ 0 - 1 - 2 ]
+	 * </pre>
+	 * @param x coordinate.
+	 * @param y coordinate.
 	 * @return 
 	 * Returns byte between -1 and 7. Returns -1 when no anchor is under the Point.
 	 * The number represents an anchor. Follow the text up above.
@@ -146,7 +154,7 @@ public abstract class GShape {
 	public EAnchors onShape(int x, int y ) {
 		EAnchors anchor = this.gAnchors.onAnchor(x, y);
 		if(anchor == null) {
-			if(shape.contains(x, y))return EAnchors.MM;
+			if(drawing.contains(x, y))return EAnchors.MM;
 			else return null;
 		}else {
 			return anchor;
@@ -170,6 +178,14 @@ public abstract class GShape {
 	 * Override to use.
 	 * */
 	public void shear(int shearAnchor) {}
+	
+	public void appendText(char c) {
+		text.append(c);
+	}
+
+	public void deleteChar() {
+		if(text.length()!=0) text.deleteCharAt(text.length()-1);
+	}
 	/**
 	 * Save all anchor's location according to anchor number. 
 	 * Anchors are on every edge and side from a rectangle which has same location, size attribute.
@@ -179,28 +195,34 @@ public abstract class GShape {
 	 * @param I 0 - 1 - 2
 	 * */
 	protected void setAnchorLocation() {
-		this.gAnchors.setPosition(this.shape);
+		this.gAnchors.setPosition(this.origin, this.theta+this.groupTheta, this.axis);
 	}
 	/**Turn on/off selected mode.
 	 * @param bSelected true to turn on selected mode. false to turn it off.
 	 * */
 	public void setSelected(boolean bSelected) {this.bSelected = bSelected;}
-	
-	public void group(boolean group) {this.isGroupChild = group;}
-	
+	public void setGroupChild(boolean bGrouped) {
+		this.isGroupChild = bGrouped;
+		if(!isGroupChild) {
+			this.theta += this.groupTheta;
+			this.groupTheta = 0;
+		}
+	}
+	public void setStrColor(Color color) {this.strColor = color;}
 	public void setLineColor(Color color) {this.lineColor = color;}
 	public void setInnerColor(Color color) {
 		this.innerColor = color;
 		makeUnselectRange();
 	}
+	public void setAbsoluteAxis(Point nextAxis) {this.axis = nextAxis;}
 
 	public boolean isSelected() {return this.bSelected;}
-	public boolean isGrouped() {return this.isGroupChild;}
 	public Point getCenter() {return this.center;}
-	public Point getStart() {return this.start;}
 	public Color getInnerColor() {return this.innerColor;}
 	public Color getLineColor() {return this.lineColor;}
-	public Shape getShape() {return this.shape;}
+	public Shape getDrawingShape() {return this.drawing;}
+	public Shape getOriginShape() {return this.origin;}
+	public Point getAxis() {return axis;}
 
 	/**
 	 * @return Returns anchor's coordinate. 
@@ -208,27 +230,81 @@ public abstract class GShape {
 	public Point getAnchor(int anchor) {
 		return this.gAnchors.getAnchor(anchor);
 	}
-	
-	public void transform(AffineTransform affine) {
-		this.shape = affine.createTransformedShape(shape);
-	}
 	/**
 	 * 
 	 * */
+	public void rotate(double theta) {
+		if(this.isGroupChild) {
+			this.groupTheta += theta;
+		}else this.theta += theta;
+		this.setCenterOrigin();
+		this.setRotatedShape(this.origin, center, this.theta);
+		this.setRotatedShape(this.drawing, axis, this.groupTheta);
+		System.out.println();
+	}
+	protected void setRotatedShape(Shape origin, Point axis, double theta) {
+		affine.setToTranslation(-axis.getX(), -axis.getY());
+		Shape shape = affine.createTransformedShape(origin);
+		
+		affine.setToRotation(theta);
+		shape = affine.createTransformedShape(shape);
+		
+		affine.setToTranslation(axis.getX(), axis.getY());
+		this.drawing = affine.createTransformedShape(shape);
+	}
+	/**
+	 * Transform this shape with {@code AffineTransform}.
+	 * @see AffineTransform
+	 * */
+	public void translate(AffineTransform affine) {
+		this.origin = affine.createTransformedShape(origin);
+		this.drawing = affine.createTransformedShape(drawing);
+	}
+	public void scale(AffineTransform affine) {
+		this.origin = affine.createTransformedShape(origin);
+		this.setRotatedShape(this.origin, center, theta);
+		this.setRotatedShape(this.drawing,axis, this.groupTheta);
+	}
+	/**
+	 * Complete Shape transforming. {@code transform} does not determine shape's start point,
+	 * center, unselect range, and anchor location.
+	 * */
 	public void finalizeTransforming() {
-		Rectangle r = this.shape.getBounds();
+//		this.setRotatedShape();
+		Rectangle r = this.drawing.getBounds();
 		this.start.setLocation(r.x, r.y);
 		this.center.setLocation(r.getCenterX(), r.getCenterY());
+		//center를 finish 할 때 정하고 아핀변환으로 정하기... 근데 origin의 센터는 기존에 하던 대로 해도 될 듯. 
+//		this.setAxis(center.getLocation());
+		
+		if(!this.isGroupChild) {
+			this.setAbsoluteAxis(center.getLocation());
+//			affine
+//			affine.transform(center, center);
+			if(this.theta>Math.PI) theta -= Math.PI;
+			r = this.origin.getBounds();
+			double tx = center.getX() - r.getCenterX();
+			double ty = center.getY() - r.getCenterY();
+			affine.setToTranslation(tx, ty);
+			origin = affine.createTransformedShape(origin);	
+		}else {
+			if(this.groupTheta>Math.PI) groupTheta -= Math.PI;
+		}
+		
 		this.makeUnselectRange();
 		this.setAnchorLocation();
 	}
+	protected void setCenterOrigin() {
+		Rectangle r = this.origin.getBounds();
+		this.center.setLocation(r.getCenterX(), r.getCenterY());
+	}
 	private void makeUnselectRange() {
 		if(this.innerColor == null) {
-			unselectRangeMaker.setToScale(0.75, 0.75);
+			unselectRangeMaker.setToScale(CShapes.UNSELECT_DEFAULT, CShapes.UNSELECT_DEFAULT);
 			unselectRangeMaker.translate(-start.x, -start.y);
-			unselectRange = unselectRangeMaker.createTransformedShape(shape);
-			double w = (shape.getBounds().getWidth() - unselectRange.getBounds().getWidth())/unselectRangeX;
-			double h = (shape.getBounds().getHeight() - unselectRange.getBounds().getHeight())/unselectRangeY;
+			unselectRange = unselectRangeMaker.createTransformedShape(drawing);
+			double w = (drawing.getBounds().getWidth() - unselectRange.getBounds().getWidth())/unselectRangeX;
+			double h = (drawing.getBounds().getHeight() - unselectRange.getBounds().getHeight())/unselectRangeY;
 			unselectRangeMaker.setToTranslation(start.getX()+w, start.getY()+h);
 			unselectRange = unselectRangeMaker.createTransformedShape(unselectRange);
 		}
@@ -237,10 +313,17 @@ public abstract class GShape {
 	 * Make this object to follow GShapeInfo's attribute.
 	 * */
 	public void setAtribute(GShapeInfo info) {
-		this.shape = info.getShape();
+		this.origin = info.getShape();
 		this.innerColor = info.getInnerColor();
 		this.lineColor = info.getLineColor();
-		this.setAnchorLocation();
+		this.theta = info.getRadian();
+		this.text = info.getText();
+		
+		Rectangle r = origin.getBounds();
+		this.start = new Point(r.x, r.y);
+		this.center.setLocation(r.getCenterX(), r.getCenterY());
+		this.axis = center;
+		this.setRotatedShape(this.origin, center, this.theta);
 	}
 	/**
 	 * @return GShapeInfo object that contains all attributes. 
@@ -248,9 +331,12 @@ public abstract class GShape {
 	 * */
 	public GShapeInfo getAllAttribute() {
 		GShapeInfo info = new GShapeInfo();
+		info.setName(getClass().getName());
 		info.setInnerColor(innerColor);
 		info.setLineColor(lineColor);
-		info.setShape(shape);
+		info.setRadian(theta+this.groupTheta);
+		info.setShape(origin);
+		info.setText(text);
 		return info;
 	}
 }

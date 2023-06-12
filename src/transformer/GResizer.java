@@ -1,13 +1,12 @@
 package transformer;
 
-import java.awt.Color;
 import java.awt.Point;
-import java.util.Vector;
 
 import shapes.GShape;
 
 public abstract class GResizer extends GTransformer {
 
+	private static int anchorNum;
 	protected Point nextOriginPoint;
 	protected Point anchorPoint;
 	
@@ -16,6 +15,7 @@ public abstract class GResizer extends GTransformer {
 	}
 
 	public static GTransformer createGResizser (int anchor, GShape shape) {
+		anchorNum = anchor;
 		GResizer resizer;
 		switch(anchor) {
 		case 3:
@@ -66,7 +66,7 @@ public abstract class GResizer extends GTransformer {
 		}
 		
 		@Override
-		public void keepTransform(Point end) {
+		public void keepTransform(Point end, boolean shiftDown) {
 			double xRate;
 			int dx = end.x - start.x;
 
@@ -88,7 +88,7 @@ public abstract class GResizer extends GTransformer {
 			this.nextOriginPoint = new Point();
 		}
 		@Override
-		public void keepTransform(Point end) {
+		public void keepTransform(Point end, boolean shiftDown) {
 			double yRate;
 			int dy = end.y - start.y;
 
@@ -112,7 +112,7 @@ public abstract class GResizer extends GTransformer {
 		}
 		
 		@Override
-		public void keepTransform(Point end) {
+		public void keepTransform(Point end, boolean shiftDown) {
 			double xRate;
 			double yRate;
 			int dx = end.x - start.x;
@@ -161,14 +161,14 @@ public abstract class GResizer extends GTransformer {
 	protected void transform(double xRate, double yRate, GShape shape) {
 		this.affineTransfrom.setToScale(xRate, yRate);
 		this.affineTransfrom.translate(-start.x, -start.y);
-		shape.transform(this.affineTransfrom);
+		shape.scale(this.affineTransfrom);
 		
 		this.affineTransfrom.setToTranslation(start.x, start.y);
-		shape.transform(this.affineTransfrom);
+		shape.scale(this.affineTransfrom);
 	}
 	
 	@Override
-	public GShape finalizeTransform(Color in, Color line) {
+	public GShape finalizeTransform(Point end) {
 		shape.finalizeTransforming();
 		return null;
 	}

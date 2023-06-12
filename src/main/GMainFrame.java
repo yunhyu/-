@@ -19,6 +19,7 @@ import javax.swing.JFrame;
 import frame.GDrawingPanel;
 import frame.GMenuBar;
 import frame.GToolBar;
+import main.GContants.EActionCommands;
 
 public class GMainFrame extends JFrame {
 
@@ -77,14 +78,15 @@ public class GMainFrame extends JFrame {
 		@Override
 		public void keyTyped(KeyEvent e) {
 			System.out.println("typed "+(int)e.getKeyChar());
-			int input = e.getKeyChar();
-			if(input==3) {//ctrl c
-				
-			}
-			else if(input==127) {
-				canvus.deleteSelectedShape();
-			}else if(input>7&&input<127) {
-				
+			switch(e.getKeyChar()) {
+			case 3 : canvus.copy(false);break;//ctrl c
+			case 8 : canvus.deleteChar();break;
+			case 22 : canvus.paste();break;//ctrl v
+			case 24 : canvus.copy(true);break;//ctrl x
+			case 127 : canvus.deleteSelectedShape(); break;
+			default : 
+				canvus.append(e.getKeyChar());
+				break;
 			}
 		}
 
@@ -124,19 +126,50 @@ public class GMainFrame extends JFrame {
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			Color c = JColorChooser.showDialog(parent, getTitle(), getForeground());
-			switch(e.getActionCommand()) {
-			case "default-in":
+			
+			switch(EActionCommands.valueOf(e.getActionCommand())) {
+			case DEFAULT_IN:
+				Color c = JColorChooser.showDialog(parent, getTitle(), getForeground());
 				toolbar.setDefaultInnerColor(c);
 				break;
-			case "default-line":
+			case DEFAULT_LINE:
+				c = JColorChooser.showDialog(parent, getTitle(), getForeground());
 				toolbar.setDefaultLineColor(c);
 				break;
-			case "shape-in":
+			case SHAPE_IN:
+				c = JColorChooser.showDialog(parent, getTitle(), getForeground());
+				canvus.setInnerColor(c);
 				break;
-			case "shape-line":
+			case SHAPE_LINE:
+				c = JColorChooser.showDialog(parent, getTitle(), getForeground());
+				canvus.setLineColor(c);
 				break;
-				
+			case STRING_COLOR:
+				c = JColorChooser.showDialog(parent, getTitle(), getForeground());
+				canvus.setStrColor(c);
+				break;
+			case GROUP:
+				canvus.group();
+				break;
+			case UNGROUP:
+				canvus.ungroup();
+				break;
+			case TOP:
+				canvus.setZOrder(0);
+				break;
+			case UP:
+				canvus.goUp();
+				break;
+			case DOWN:
+				canvus.goDown();
+				break;
+			case BOTTOM:
+				canvus.setZOrder(-1);
+				break;
+			default:
+				System.out.println("not yet add in ActionListener");
+				break;
+			
 			}
 		}
 	}
